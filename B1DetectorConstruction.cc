@@ -41,6 +41,8 @@
 #include "G4PVPlacement.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4Tubs.hh"
+#include <G4VisAttributes.hh>
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -71,6 +73,21 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
   //     
   // World
   //
+  
+  //Colours
+  G4VisAttributes* green = new G4VisAttributes(G4Colour::Green());
+  green->SetVisibility(true);
+  green->SetForceSolid(true);
+  G4VisAttributes* red = new G4VisAttributes(G4Colour::Red());
+  red->SetVisibility(true);
+  red->SetForceSolid(true);
+  G4VisAttributes* blue = new G4VisAttributes(G4Colour::Blue());
+  blue->SetVisibility(true);
+  blue->SetForceSolid(true);
+  G4VisAttributes* yellow = new G4VisAttributes(G4Colour::Yellow());
+  yellow->SetVisibility(true);
+  yellow->SetForceSolid(true);
+  
   G4double world_sizeXY = 1000*cm;
   G4double world_sizeZ  = 1000*cm;
   G4Material* world_mat = nist->FindOrBuildMaterial("G4_AIR");
@@ -118,35 +135,39 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
   
   G4Box* solidAir = new G4Box("air",0.5*air_sizeXY, 0.5*air_sizeXY, 0.5*air_sizeZ);     //its size
       
-  G4LogicalVolume* airWorld = new G4LogicalVolume(solidAir, air_mat, "inner");           //its name
+  G4LogicalVolume* airWorld = new G4LogicalVolume(solidAir, air_mat, "inner"); //its name
   
   G4ThreeVector air_pos = G4ThreeVector(0,0,0);
   G4VPhysicalVolume* air_physical = new G4PVPlacement(0, air_pos, "air", airWorld, wall_physical, false, 0, checkOverlaps);	
 
 	//face construction 
-	G4double face_r = 2*5.71*cm;
-	G4double face_hz =  1*cm;
+	G4double face_r = 5.71*cm;
+	G4double face_hz =  0.5*mm;
 	G4Tubs* face_shape = new G4Tubs("face", 0*mm, face_r, face_hz, 0*deg, 360*deg);
 	G4LogicalVolume* face_log = new G4LogicalVolume(face_shape, nist->FindOrBuildMaterial("G4_Al"), "face");
+	face_log->SetVisAttributes(red);
 
 
 	// scintillator construction
-	G4double scint_r = 2*5.51*cm;
-	G4double scint_hz = 2*5.40*cm;
+	G4double scint_r = 5.51*cm;
+	G4double scint_hz = 5.40*cm;
 	G4Tubs* scintillator_shape = new G4Tubs("scintillator",0*mm,scint_r,scint_hz,0*deg,360*deg);
 	G4LogicalVolume* scint_log = new G4LogicalVolume(scintillator_shape, nist->FindOrBuildMaterial("G4_SODIUM_IODIDE"), "scintillator");
-
+    scint_log->SetVisAttributes(blue);
     // Shield Construction
-    G4double shield_r = 2*5.71*cm;
-	G4double shield_hz = 2*5.40*cm;
+    G4double shield_r = 5.71*cm;
+	G4double shield_hz = 5.40*cm;
 	G4Tubs* shield_shape = new G4Tubs("shield",scint_r,shield_r,shield_hz,0*deg,360*deg);
 	G4LogicalVolume* shield_log = new G4LogicalVolume(shield_shape, nist->FindOrBuildMaterial("G4_Al"), "shield");
+	shield_log->SetVisAttributes(yellow);
 	
 	//Detector Back Construction
-	G4double back_r = 2*5.71*cm;
-	G4double back_hz =  1*cm;
+	G4double back_r = 5.71*cm;
+	G4double back_hz =  2*mm;
 	G4Tubs* back_shape = new G4Tubs("back", 0*mm, back_r, back_hz, 0*deg, 360*deg);
 	G4LogicalVolume* back_log = new G4LogicalVolume(back_shape, nist->FindOrBuildMaterial("G4_Al"), "face");
+	back_log->SetVisAttributes(green);
+
 
 	
 	// Apparatus Shifts
@@ -163,11 +184,7 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
 		G4PVPlacement(0,G4ThreeVector(0,0*cm,0), LV,"PV", NaI_log, false,0,checkOverlaps);
 */
 
-    // face placement
-	G4ThreeVector face_pos = G4ThreeVector(0,0,hz_shift);
-	G4RotationMatrix* face_rot = new G4RotationMatrix();
-	face_rot->rotateX(0*deg);
-    G4VPhysicalVolume* face = new G4PVPlacement(0, face_pos, "face", face_log, air_physical, false, 0, checkOverlaps);	
+    
 
 	// shield Placement
 	G4ThreeVector shield_pos = G4ThreeVector(0,0,hz_shift + shield_hz  + face_hz);
@@ -188,10 +205,16 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
     G4VPhysicalVolume* table = new G4PVPlacement(0, table_pos, "table", table_log, air_physical, false, 0, checkOverlaps);
     
     // back placement
-    G4ThreeVector back_pos = G4ThreeVector(0,0, hz_shift + face_hz + 2*shield_hz + back_hz);
+    G4ThreeVector back_pos = G4ThreeVector(0,0, hz_shift + back_hz + 2*shield_hz + back_hz);
 	G4RotationMatrix* back_rot = new G4RotationMatrix();
-	face_rot->rotateX(0*deg);
+	back_rot->rotateX(0*deg);
     G4VPhysicalVolume* back_physical = new G4PVPlacement(0, back_pos, "back", back_log, air_physical, false, 0, checkOverlaps);	
+    
+    // face placement
+	G4ThreeVector face_pos = G4ThreeVector(0,0,hz_shift);
+	G4RotationMatrix* face_rot = new G4RotationMatrix();
+	face_rot->rotateX(0*deg);
+    G4VPhysicalVolume* face = new G4PVPlacement(0, face_pos, "face", face_log, air_physical, false, 0, checkOverlaps);	
 
 
 
