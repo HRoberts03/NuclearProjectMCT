@@ -115,8 +115,8 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
     
                                    
     //walls
-      G4double wall_sizeXY = 950*cm;
-      G4double wall_sizeZ  = 950*cm;
+      G4double wall_sizeXY = 500*cm;
+      G4double wall_sizeZ  = 500*cm;
       G4Material* wall_mat = nist->FindOrBuildMaterial("G4_CONCRETE");
   
      G4Box* solidWalls = new G4Box("Walls",0.5*wall_sizeXY, 0.5*wall_sizeXY, 0.5*wall_sizeZ);     //its size
@@ -129,8 +129,8 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
 
     // Air
   //
-  G4double air_sizeXY = 900*cm;
-  G4double air_sizeZ  = 900*cm;
+  G4double air_sizeXY = 450*cm;
+  G4double air_sizeZ  = 450*cm;
   G4Material* air_mat = nist->FindOrBuildMaterial("G4_AIR");
   
   G4Box* solidAir = new G4Box("air",0.5*air_sizeXY, 0.5*air_sizeXY, 0.5*air_sizeZ);     //its size
@@ -199,7 +199,7 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
 	G4VPhysicalVolume* scintillator = new G4PVPlacement(0, scintillator_pos, "scintillator", scint_log, shield, false, 0, checkOverlaps);
 		
 	//Table placement
-    G4ThreeVector table_pos = G4ThreeVector(0,-table_shift,hz_shift);
+    G4ThreeVector table_pos = G4ThreeVector(0,-table_shift,0);
 	G4RotationMatrix* table_rot = new G4RotationMatrix();
 	table_rot->rotateX(0*deg);
     G4VPhysicalVolume* table = new G4PVPlacement(0, table_pos, "table", table_log, air_physical, false, 0, checkOverlaps);
