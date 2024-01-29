@@ -39,22 +39,27 @@
 #include "G4ParticleDefinition.hh"
 #include "G4SystemOfUnits.hh"
 #include "Randomize.hh"
+#include "G4Geantino.hh"
+#include "G4IonTable.hh"
+
+
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
 
 B1PrimaryGeneratorAction::B1PrimaryGeneratorAction()
 : G4VUserPrimaryGeneratorAction(),
   fParticleGun(0), 
   fEnvelopeBox(0)
 {
-  G4int n_particle = 1;
-  fParticleGun  = new G4ParticleGun(n_particle);
 
   // default particle kinematic
+  G4int n_particle = 1;
+  fParticleGun  = new G4ParticleGun(n_particle);
   G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
   G4String particleName;
-  G4ParticleDefinition* particle
-    = particleTable->FindParticle(particleName="gamma");
+  G4ParticleDefinition* particle = particleTable->FindParticle(particleName="geantino");
   fParticleGun->SetParticleDefinition(particle);
   
   G4double theta = (2*M_PI*G4UniformRand());
@@ -62,21 +67,13 @@ B1PrimaryGeneratorAction::B1PrimaryGeneratorAction()
   G4double x = sin(theta)*cos(phi);
   G4double y = sin(theta)*sin(phi);
   G4double z = cos(theta);
- 
+  
   fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));
-  fParticleGun->SetParticleEnergy(662.*keV);
-}
 
-void B1PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
-{
-  G4double theta = (2*M_PI*G4UniformRand());
-  G4double phi = (M_PI*G4UniformRand());
-  G4double x = sin(theta)*cos(phi);
-  G4double y = sin(theta)*sin(phi);
-  G4double z = cos(theta);
- 
-  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));
-  fParticleGun->GeneratePrimaryVertex(anEvent);
+  fParticleGun->SetParticleEnergy(0*eV);
+  fParticleGun->SetParticlePosition(G4ThreeVector(0.,0.,0.));
+  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));  
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -88,7 +85,8 @@ B1PrimaryGeneratorAction::~B1PrimaryGeneratorAction()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-/*void B1PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
+
+void B1PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
   //this function is called at the begining of ecah event
   //
@@ -97,24 +95,42 @@ B1PrimaryGeneratorAction::~B1PrimaryGeneratorAction()
   // on DetectorConstruction class we get Envelope volume
   // from G4LogicalVolumeStore.
   
-  G4double XY = 1*cm;
-  G4double Z = 0;
-
-  G4double size = 1.0; 
-  G4double x0 = size * XY * (G4UniformRand()-0.5);
-  G4double y0 = size * XY * (G4UniformRand()-0.5);
-  G4double z0 = -0.5 * Z;
   
-  fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
+  //Cobalt decay chain
+  if (fParticleGun->GetParticleDefinition() == G4Geantino::Geantino()) {
+    //adjust to change the source , Z is proton number and A total nucleons.
+    G4int Z = 27, A = 60; 
+    G4double ionCharge   = 0.*eplus;
+    G4double excitEnergy = 0.*keV;
 
-  if(G4UniformRand()<0.5)
-	  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0,0,-1));
-	// change momentum direction
+    G4ParticleDefinition* ion = G4IonTable::GetIonTable()->GetIon(Z,A,excitEnergy);
+    fParticleGun->SetParticleDefinition(ion);
+    fParticleGun->SetParticleCharge(ionCharge);
+  }
+    // use this for the caesium 137 source
+    
+    //if (fParticleGun->GetParticleDefinition() == G4Geantino::Geantino()) {
+    //adjust to change the source , Z is proton number and A total nucleons.
+    //G4int Z = 55, A = 137; 
+    //G4double ionCharge   = 0.*eplus;
+    //G4double excitEnergy = 0.*keV;
 
+    //G4ParticleDefinition* ion = G4IonTable::GetIonTable()->GetIon(Z,A,excitEnergy);
+    //fParticleGun->SetParticleDefinition(ion);
+    //fParticleGun->SetParticleCharge(ionCharge);
+  
+  //source position
+  G4double theta = (2*M_PI*G4UniformRand());
+  G4double phi = (M_PI*G4UniformRand());
+  G4double x = sin(theta)*cos(phi);
+  G4double y = sin(theta)*sin(phi);
+  G4double z = cos(theta);
+ 
+  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));
   fParticleGun->GeneratePrimaryVertex(anEvent);
 }
-*/
 
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+
 
