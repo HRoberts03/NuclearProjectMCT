@@ -65,6 +65,8 @@ void B1EventAction::EndOfEventAction(const G4Event* event)
   if(fEdep>0.0){
   G4cout << event->GetEventID() << " has " << fEdep*keV << " deposited in detectors " << G4endl;
   }
+  fRunAction->AddEnergy(fEdep);
+  
 }
 
 

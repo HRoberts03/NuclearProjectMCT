@@ -41,6 +41,12 @@
 #include "G4UnitsTable.hh"
 #include "G4SystemOfUnits.hh"
 
+#include <iostream>
+#include <fstream>
+#include <array> 
+#include <cmath>
+#include <vector>
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 B1RunAction::B1RunAction()
@@ -78,9 +84,14 @@ void B1RunAction::BeginOfRunAction(const G4Run*)
   // inform the runManager to save random number seed
   G4RunManager::GetRunManager()->SetRandomNumberStore(false);
 
+ 
+
   // reset parameters to their initial values
   //G4ParameterManager* parameterManager = G4ParameterManager::Instance();
   //parameterManager->Reset();
+  std::vector <G4double> EnergyArrayRaw;
+  std::ofstream myFile;
+    myFile.open("output.csv");
 
 }
 
@@ -91,6 +102,77 @@ void B1RunAction::EndOfRunAction(const G4Run* run)
   G4int nofEvents = run->GetNumberOfEvent();
   if (nofEvents == 0) return;
 
+// smears the data as a detector would
+G4double m = 10 * G4UniformRand();
+G4double c = 5 * G4UniformRand();
+std::vector <G4double> energiesLinearGain = m*EnergyArrayRaw + c;
+
+//finds max and min value of the smeared energy
+G4double maxE = energiesLinearGain[0];
+for(G4double i : energiesLinearGain){
+  if(i > maxE){
+    maxE = i;
+  };
+};
+G4double minE = energiesLinearGain[0];
+for(G4double i : energiesLinearGain){
+  if(i < minE){
+    minE = i;
+  };
+};
+
+//create the bins locations
+G4double rangeE = maxE - minE;
+int rangeEint = floor(rangeE);
+int Bins[rangeEint] ;
+for(unsigned int i=0; i<rangeEint; i++){
+  Bins[i] = i;
+};
+
+//turns all the energies to their bin values
+for(int i : Bins){
+  int count =0;
+for(int j : energiesLinearGain){
+  if(abs(i-j)<0.5){
+    energiesLinearGain[count] = i;
+    ++ count;
+  };};};
+
+
+//create an array of unique energies. 
+std::vector <G4double> UniqueEnergies;
+UniqueEnergies.push_back(energiesLinearGain[0]);
+for(G4double i : energiesLinearGain){
+  bool Exists = false;
+  for(G4double j :UniqueEnergies){
+    if(i==j){
+      Exists = true;
+    };
+  };
+  if(Exists == true){
+    UniqueEnergies.push_back(i);
+  };
+};
+
+//gets the count rate.
+std::vector <G4double> CountRate;
+for(G4double i : UniqueEnergies){
+  count3 = 0;
+  for(G4double j : energiesLinearGain){
+    if(i==j){
+      ++ count3;
+    };
+  };
+  CountRate.push_back(count3);
+};
+
+  for(unsigned int i=0; i < CountRate.size(); i++){
+    //cout << EnergyArray[i] << "," << CountRate[i] << "\n";
+    myFile <<UniqueEnergies[i] << "," << CountRate[i] << "\n";
+   
+};
+  myfile.close()
+  
   // Merge parameters 
   //G4ParameterManager* parameterManager = G4ParameterManager::Instance();
   //parameterManager->Merge();
@@ -129,9 +211,16 @@ void B1RunAction::EndOfRunAction(const G4Run* run)
 
 void B1RunAction::AddEdep(G4double edep)
 {
-//  fEdep  += edep;
-//  fEdep2 += edep*edep;
+//  fEdep  += edepG4doubl;
+//  fEdep2 += edep*edepG4doubl;
 }
+void AddEnergy(G4double energy)
+{
+  EnergyArrayRaw.push_back(energy);
+};
+
+
+
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
