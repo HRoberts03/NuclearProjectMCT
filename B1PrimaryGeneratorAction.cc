@@ -59,9 +59,10 @@ B1PrimaryGeneratorAction::B1PrimaryGeneratorAction()
   fParticleGun  = new G4ParticleGun(n_particle);
   G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
   G4String particleName;
-  G4ParticleDefinition* particle = particleTable->FindParticle(particleName="geantino");
+  G4ParticleDefinition* particle = particleTable->FindParticle(particleName="gamma");
   fParticleGun->SetParticleDefinition(particle);
   
+  // positioning
   G4double theta = (2*M_PI*G4UniformRand());
   G4double phi = (M_PI*G4UniformRand());
   G4double x = sin(theta)*cos(phi);
@@ -69,8 +70,7 @@ B1PrimaryGeneratorAction::B1PrimaryGeneratorAction()
   G4double z = cos(theta);
   
   fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));
-
-  fParticleGun->SetParticleEnergy(0*eV);
+  fParticleGun->SetParticleEnergy(1330*eV);
   fParticleGun->SetParticlePosition(G4ThreeVector(0.,0.,0.));
   fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));  
 
@@ -88,37 +88,57 @@ B1PrimaryGeneratorAction::~B1PrimaryGeneratorAction()
 
 void B1PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
-  //this function is called at the begining of ecah event
-  //
+    //from data set 1
+ if(G4UniformRand()*100 < 0.93)
+	  fParticleGun->SetParticleEnergy(0.78*keV);
+ if(G4UniformRand()*100 < 1.11)
+	  fParticleGun->SetParticleEnergy(7.649*keV);
+ if(G4UniformRand()*100 < 2.15)
+	  fParticleGun->SetParticleEnergy(7.649*keV);
+  if(G4UniformRand()*100 < 2.0601)
+	  fParticleGun->SetParticleEnergy(58.603*keV);
+  if(G4UniformRand()*100 <  9.1)
+	  fParticleGun->SetParticleEnergy(6.915*keV);
+  if(G4UniformRand()*100 <  18)
+	  fParticleGun->SetParticleEnergy(6.93*keV);
+	  
+ //from data set 2
+ if(G4UniformRand()*100 <  0.0078)
+	  fParticleGun->SetParticleEnergy(826.10*keV);
+ if(G4UniformRand()*100 <  0.25)
+	  fParticleGun->SetParticleEnergy(1332.492*keV);
+ if(G4UniformRand()*100 <   7.5*std::pow(10, -4))
+	  fParticleGun->SetParticleEnergy(2158.57*keV);
 
-  // In order to avoid dependence of PrimaryGeneratorAction
-  // on DetectorConstruction class we get Envelope volume
-  // from G4LogicalVolumeStore.
-  
-  
-  //Cobalt decay chain
-  if (fParticleGun->GetParticleDefinition() == G4Geantino::Geantino()) {
-    //adjust to change the source , Z is proton number and A total nucleons.
-    G4int Z = 27, A = 60; 
-    G4double ionCharge   = 0.*eplus;
-    G4double excitEnergy = 0.*keV;
+// from data set 3
 
-    G4ParticleDefinition* ion = G4IonTable::GetIonTable()->GetIon(Z,A,excitEnergy);
-    fParticleGun->SetParticleDefinition(ion);
-    fParticleGun->SetParticleCharge(ionCharge);
-  }
-    // use this for the caesium 137 source
-    
-    //if (fParticleGun->GetParticleDefinition() == G4Geantino::Geantino()) {
-    //adjust to change the source , Z is proton number and A total nucleons.
-    //G4int Z = 55, A = 137; 
-    //G4double ionCharge   = 0.*eplus;
-    //G4double excitEnergy = 0.*keV;
-
-    //G4ParticleDefinition* ion = G4IonTable::GetIonTable()->GetIon(Z,A,excitEnergy);
-    //fParticleGun->SetParticleDefinition(ion);
-    //fParticleGun->SetParticleCharge(ionCharge);
-  
+if(G4UniformRand()*100 <  3.29*std::pow(10, -4))
+	  fParticleGun->SetParticleEnergy(0.85*keV);
+ if(G4UniformRand()*100 <  0.00322)
+	  fParticleGun->SetParticleEnergy(7.461*keV);
+ if(G4UniformRand()*100 <   0.0063)
+	  fParticleGun->SetParticleEnergy(7.478*keV);
+	  
+if(G4UniformRand()*100 <   7.6*std::pow(10, -4))
+	  fParticleGun->SetParticleEnergy(8.265*keV);
+ if(G4UniformRand()*100 <  3.91*std::pow(10, -4))
+	  fParticleGun->SetParticleEnergy(8.265*keV);
+ if(G4UniformRand()*100 <   0.0075)
+	  fParticleGun->SetParticleEnergy(347.14*keV);
+	  
+	  
+if(G4UniformRand()*100 <  0.0076)
+	  fParticleGun->SetParticleEnergy(826.10*keV);
+ if(G4UniformRand()*100 <  99.85)
+	  fParticleGun->SetParticleEnergy(1173.228*keV);
+ if(G4UniformRand()*100 <   99.9826)
+	  fParticleGun->SetParticleEnergy(1332.492*keV);
+	  
+if(G4UniformRand()*100 <  0.00120)
+	  fParticleGun->SetParticleEnergy(2158.57*keV);
+ if(G4UniformRand()*100 <   2*10*-6)
+	  fParticleGun->SetParticleEnergy(2505.692*keV);
+ 
   //source position
   G4double theta = (2*M_PI*G4UniformRand());
   G4double phi = (M_PI*G4UniformRand());
@@ -129,8 +149,3 @@ void B1PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
   fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));
   fParticleGun->GeneratePrimaryVertex(anEvent);
 }
-
-
-
-
-
