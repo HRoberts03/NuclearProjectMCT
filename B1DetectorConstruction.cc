@@ -158,7 +158,7 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
     // Shield Construction
     G4double shield_r = 5.71*cm;
 	G4double shield_hz = 5.40*cm + face_hz + back_hz;
-	G4Tubs* shield_shape = new G4Tubs("shield",scint_r,shield_r,shield_hz,0*deg,360*deg);
+	G4Tubs* shield_shape = new G4Tubs("shield",0,shield_r,shield_hz,0*deg,360*deg);
 	G4LogicalVolume* shield_log = new G4LogicalVolume(shield_shape, nist->FindOrBuildMaterial("G4_Al"), "shield");
 	shield_log->SetVisAttributes(yellow);
 	
@@ -210,7 +210,7 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
 	back_rot->rotateX(0*deg);
     G4VPhysicalVolume* back_physical = new G4PVPlacement(0, back_pos, "back", back_log, shield, false, 0, checkOverlaps);	
     
-    // face placement
+     //face placement
 	G4ThreeVector face_pos = G4ThreeVector(0,0,-1*shield_hz);
 	G4RotationMatrix* face_rot = new G4RotationMatrix();
 	face_rot->rotateX(0*deg);
