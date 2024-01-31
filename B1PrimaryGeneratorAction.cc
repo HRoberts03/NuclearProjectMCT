@@ -1,4 +1,4 @@
-//
+
 // ********************************************************************
 // * License and Disclaimer                                           *
 // *                                                                  *
@@ -70,7 +70,7 @@ B1PrimaryGeneratorAction::B1PrimaryGeneratorAction()
   G4double z = cos(theta);
   
   fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));
-  fParticleGun->SetParticleEnergy(1330*eV);
+  fParticleGun->SetParticleEnergy(0*eV);
   fParticleGun->SetParticlePosition(G4ThreeVector(0.,0.,0.));
   fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));  
 
@@ -89,55 +89,54 @@ B1PrimaryGeneratorAction::~B1PrimaryGeneratorAction()
 void B1PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
     //from data set 1
- if(G4UniformRand()*100 < 0.93)
-	  fParticleGun->SetParticleEnergy(0.78*keV);
- if(G4UniformRand()*100 < 1.11)
-	  fParticleGun->SetParticleEnergy(7.649*keV);
- if(G4UniformRand()*100 < 2.15)
-	  fParticleGun->SetParticleEnergy(7.649*keV);
-  if(G4UniformRand()*100 < 2.0601)
-	  fParticleGun->SetParticleEnergy(58.603*keV);
-  if(G4UniformRand()*100 <  9.1)
-	  fParticleGun->SetParticleEnergy(6.915*keV);
-  if(G4UniformRand()*100 <  18)
-	  fParticleGun->SetParticleEnergy(6.93*keV);
-	  
- //from data set 2
- if(G4UniformRand()*100 <  0.0078)
-	  fParticleGun->SetParticleEnergy(826.10*keV);
- if(G4UniformRand()*100 <  0.25)
-	  fParticleGun->SetParticleEnergy(1332.492*keV);
- if(G4UniformRand()*100 <   7.5*std::pow(10, -4))
+    
+    
+double intensities_sum =  7.5*std::pow(10, -4) + 0.0078 + 0.25 + 2.0601 + 0.0075 +  0.0076 + 99.85
++ 99.9826 + 0.00120 + 2*10*-6;
+
+double norm_rand = intensities_sum*G4UniformRand();
+   
+    if(0<norm_rand && norm_rand< 7.5*std::pow(10, -4)){
 	  fParticleGun->SetParticleEnergy(2158.57*keV);
+    }
+	  
+   if(7.5*std::pow(10, -4)< norm_rand && norm_rand <  0.0078+ 7.5*std::pow(10, -4)){
+	  fParticleGun->SetParticleEnergy(826.10*keV);
+   }
+     if(0.0078+ 7.5*std::pow(10, -4)<norm_rand && norm_rand<0.0078+ 7.5*std::pow(10, -4) + 0.25){
+	  fParticleGun->SetParticleEnergy(1332.492*keV);
+     }
+
+  if(0.0078+ 7.5*std::pow(10, -4) + 0.25< norm_rand && norm_rand < 2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25){
+	  fParticleGun->SetParticleEnergy(58.603*keV);
+}
+	  
 
 // from data set 3
-
-if(G4UniformRand()*100 <  3.29*std::pow(10, -4))
-	  fParticleGun->SetParticleEnergy(0.85*keV);
- if(G4UniformRand()*100 <  0.00322)
-	  fParticleGun->SetParticleEnergy(7.461*keV);
- if(G4UniformRand()*100 <   0.0063)
-	  fParticleGun->SetParticleEnergy(7.478*keV);
-	  
-if(G4UniformRand()*100 <   7.6*std::pow(10, -4))
-	  fParticleGun->SetParticleEnergy(8.265*keV);
- if(G4UniformRand()*100 <  3.91*std::pow(10, -4))
-	  fParticleGun->SetParticleEnergy(8.265*keV);
- if(G4UniformRand()*100 <   0.0075)
+ if(2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25< norm_rand && norm_rand <   2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075){
 	  fParticleGun->SetParticleEnergy(347.14*keV);
+ }
 	  
 	  
-if(G4UniformRand()*100 <  0.0076)
+if(2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 < norm_rand && norm_rand <   2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076){
 	  fParticleGun->SetParticleEnergy(826.10*keV);
- if(G4UniformRand()*100 <  99.85)
+}
+ 
+ if(2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076< norm_rand && norm_rand <2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076 +  99.85){
 	  fParticleGun->SetParticleEnergy(1173.228*keV);
- if(G4UniformRand()*100 <   99.9826)
+ }
+ if(2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076 +  99.85< norm_rand && norm_rand < 2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076 +  99.85 +  99.9826){
 	  fParticleGun->SetParticleEnergy(1332.492*keV);
+ }
 	  
-if(G4UniformRand()*100 <  0.00120)
+if(2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076 +  99.85 +  99.9826< norm_rand && norm_rand < 2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076 +  99.85 +  99.9826 + 0.00120){
 	  fParticleGun->SetParticleEnergy(2158.57*keV);
- if(G4UniformRand()*100 <   2*10*-6)
+}
+
+ 
+ if(2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076 +  99.85 +  99.9826 + 0.00120< norm_rand && norm_rand <   2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076 +  99.85 +  99.9826 + 0.00120 + 2*10*-6){
 	  fParticleGun->SetParticleEnergy(2505.692*keV);
+ }
  
   //source position
   G4double theta = (2*M_PI*G4UniformRand());
@@ -149,3 +148,4 @@ if(G4UniformRand()*100 <  0.00120)
   fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));
   fParticleGun->GeneratePrimaryVertex(anEvent);
 }
+
