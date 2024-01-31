@@ -39,44 +39,41 @@
 #include "G4ParticleDefinition.hh"
 #include "G4SystemOfUnits.hh"
 #include "Randomize.hh"
+#include "G4Geantino.hh"
+#include "G4IonTable.hh"
+
+
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
 
 B1PrimaryGeneratorAction::B1PrimaryGeneratorAction()
 : G4VUserPrimaryGeneratorAction(),
   fParticleGun(0), 
   fEnvelopeBox(0)
 {
-  G4int n_particle = 1;
-  fParticleGun  = new G4ParticleGun(n_particle);
 
   // default particle kinematic
+  G4int n_particle = 1;
+  fParticleGun  = new G4ParticleGun(n_particle);
   G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
   G4String particleName;
-  G4ParticleDefinition* particle
-    = particleTable->FindParticle(particleName="gamma");
+  G4ParticleDefinition* particle = particleTable->FindParticle(particleName="gamma");
   fParticleGun->SetParticleDefinition(particle);
   
+  // positioning
   G4double theta = (2*M_PI*G4UniformRand());
   G4double phi = (M_PI*G4UniformRand());
   G4double x = sin(theta)*cos(phi);
   G4double y = sin(theta)*sin(phi);
   G4double z = cos(theta);
- 
+  
   fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));
-  fParticleGun->SetParticleEnergy(662.*keV);
-}
+  fParticleGun->SetParticleEnergy(1330*eV);
+  fParticleGun->SetParticlePosition(G4ThreeVector(0.,0.,0.));
+  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));  
 
-void B1PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
-{
-  G4double theta = (2*M_PI*G4UniformRand());
-  G4double phi = (M_PI*G4UniformRand());
-  G4double x = sin(theta)*cos(phi);
-  G4double y = sin(theta)*sin(phi);
-  G4double z = cos(theta);
- 
-  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));
-  fParticleGun->GeneratePrimaryVertex(anEvent);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -88,33 +85,67 @@ B1PrimaryGeneratorAction::~B1PrimaryGeneratorAction()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-/*void B1PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
+
+void B1PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
-  //this function is called at the begining of ecah event
-  //
+    //from data set 1
+ if(G4UniformRand()*100 < 0.93)
+	  fParticleGun->SetParticleEnergy(0.78*keV);
+ if(G4UniformRand()*100 < 1.11)
+	  fParticleGun->SetParticleEnergy(7.649*keV);
+ if(G4UniformRand()*100 < 2.15)
+	  fParticleGun->SetParticleEnergy(7.649*keV);
+  if(G4UniformRand()*100 < 2.0601)
+	  fParticleGun->SetParticleEnergy(58.603*keV);
+  if(G4UniformRand()*100 <  9.1)
+	  fParticleGun->SetParticleEnergy(6.915*keV);
+  if(G4UniformRand()*100 <  18)
+	  fParticleGun->SetParticleEnergy(6.93*keV);
+	  
+ //from data set 2
+ if(G4UniformRand()*100 <  0.0078)
+	  fParticleGun->SetParticleEnergy(826.10*keV);
+ if(G4UniformRand()*100 <  0.25)
+	  fParticleGun->SetParticleEnergy(1332.492*keV);
+ if(G4UniformRand()*100 <   7.5*std::pow(10, -4))
+	  fParticleGun->SetParticleEnergy(2158.57*keV);
 
-  // In order to avoid dependence of PrimaryGeneratorAction
-  // on DetectorConstruction class we get Envelope volume
-  // from G4LogicalVolumeStore.
-  
-  G4double XY = 1*cm;
-  G4double Z = 0;
+// from data set 3
 
-  G4double size = 1.0; 
-  G4double x0 = size * XY * (G4UniformRand()-0.5);
-  G4double y0 = size * XY * (G4UniformRand()-0.5);
-  G4double z0 = -0.5 * Z;
-  
-  fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
-
-  if(G4UniformRand()<0.5)
-	  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0,0,-1));
-	// change momentum direction
-
+if(G4UniformRand()*100 <  3.29*std::pow(10, -4))
+	  fParticleGun->SetParticleEnergy(0.85*keV);
+ if(G4UniformRand()*100 <  0.00322)
+	  fParticleGun->SetParticleEnergy(7.461*keV);
+ if(G4UniformRand()*100 <   0.0063)
+	  fParticleGun->SetParticleEnergy(7.478*keV);
+	  
+if(G4UniformRand()*100 <   7.6*std::pow(10, -4))
+	  fParticleGun->SetParticleEnergy(8.265*keV);
+ if(G4UniformRand()*100 <  3.91*std::pow(10, -4))
+	  fParticleGun->SetParticleEnergy(8.265*keV);
+ if(G4UniformRand()*100 <   0.0075)
+	  fParticleGun->SetParticleEnergy(347.14*keV);
+	  
+	  
+if(G4UniformRand()*100 <  0.0076)
+	  fParticleGun->SetParticleEnergy(826.10*keV);
+ if(G4UniformRand()*100 <  99.85)
+	  fParticleGun->SetParticleEnergy(1173.228*keV);
+ if(G4UniformRand()*100 <   99.9826)
+	  fParticleGun->SetParticleEnergy(1332.492*keV);
+	  
+if(G4UniformRand()*100 <  0.00120)
+	  fParticleGun->SetParticleEnergy(2158.57*keV);
+ if(G4UniformRand()*100 <   2*10*-6)
+	  fParticleGun->SetParticleEnergy(2505.692*keV);
+ 
+  //source position
+  G4double theta = (2*M_PI*G4UniformRand());
+  G4double phi = (M_PI*G4UniformRand());
+  G4double x = sin(theta)*cos(phi);
+  G4double y = sin(theta)*sin(phi);
+  G4double z = cos(theta);
+ 
+  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));
   fParticleGun->GeneratePrimaryVertex(anEvent);
 }
-*/
-
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
