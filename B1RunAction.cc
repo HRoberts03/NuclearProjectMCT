@@ -128,17 +128,17 @@ for(unsigned int i = 0; i<energiesLinearGain.size(); i++){
 
 //create the bins locations
 G4double rangeE = maxE - minE;
-int rangeEint = floor(rangeE);
+int rangeEint = floor(rangeE)/2;
 std::vector <int> Bins;
 for(unsigned int i=0; i<rangeEint; i++){
-  Bins.push_back(i);
+  Bins.push_back(i*2);
 };
 
 //turns all the energies to their bin values
 for(int i : Bins){
   int count =0;
 for(int j : energiesLinearGain){
-  if(abs(i-j)<0.5){
+  if(abs(i-j)<1){
     energiesLinearGain[count] = i;
     ++ count;
   };};};
