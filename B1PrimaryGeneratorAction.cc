@@ -41,6 +41,12 @@
 #include "Randomize.hh"
 #include "G4Geantino.hh"
 #include "G4IonTable.hh"
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <algorithm>
+
+
 
 
 
@@ -55,7 +61,7 @@ B1PrimaryGeneratorAction::B1PrimaryGeneratorAction()
 {
 
   // default particle kinematic
-  G4int n_particle = 1;
+  G4int n_particle = 1000;
   fParticleGun  = new G4ParticleGun(n_particle);
   G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
   G4String particleName;
@@ -63,16 +69,16 @@ B1PrimaryGeneratorAction::B1PrimaryGeneratorAction()
   fParticleGun->SetParticleDefinition(particle);
   
   // positioning
-  G4double theta = (2*M_PI*G4UniformRand());
-  G4double phi = (M_PI*G4UniformRand());
-  G4double x = sin(theta)*cos(phi);
-  G4double y = sin(theta)*sin(phi);
-  G4double z = cos(theta);
+  G4double cosTheta = 2*G4UniformRand() - 1., phi = CLHEP::twopi*G4UniformRand();
+  G4double sinTheta = std::sqrt(1. - cosTheta*cosTheta);
+  G4double ux = sinTheta*std::cos(phi),
+           uy = sinTheta*std::sin(phi),
+           uz = cosTheta;
   
-  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));
+  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(ux,uy,uz));
   fParticleGun->SetParticleEnergy(0*eV);
   fParticleGun->SetParticlePosition(G4ThreeVector(0.,0.,0.));
-  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));  
+  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(ux,uy,uz));  
 
 }
 
@@ -90,62 +96,75 @@ void B1PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
     //from data set 1
     
+    // Source Definitions
+
+     //Co60 
+    std::vector<double> Co60_intensities = {7.5 * std::pow(10, -4), 0.0078, 0.25, 2.0601, 0.0075,
+                                             0.0076, 99.85, 99.9826, 0.00120, 2 * std::pow(10, -6)};
+    std::vector<double> Co60_energies = {2158.57, 826.10, 1332.492, 58.603, 347.14,
+                                             826.10, 826.10, 1332.492, 2158.57, 2505.692};
+    size_t Co60_size = Co60_intensities.size();
     
-double intensities_sum =  7.5*std::pow(10, -4) + 0.0078 + 0.25 + 2.0601 + 0.0075 +  0.0076 + 99.85
-+ 99.9826 + 0.00120 + 2*10*-6;
+    //Cs137
+    std::vector<double> Cs137_intensities = {0.91,1.99,3.64,0.348,0.672,0.213,5.8*std::pow(10,-4),85.10};
+    
+    std::vector<double> Cs137_energies = {4.47,31.817,32.194,36.304,36.378,37.255,283.5,661.657};
+    
+    size_t Cs137_size = Cs137_intensities.size();
+    
+    //Ba133
+    
+    std::vector<double> Ba133_intensities = { 16.4,1.42,15.1,27.6,2.64,5.10,1.61,17.69,1.6*std::pow(10,-4),15.7,33.9,62.2,
+    5.88,11.4,3.51,2.14,2.65,32.9,0.638,0.453,7.16,18.34,62.05,8.94};
+    
+    std::vector<double> Ba133_energies = {4.47,12.327,31.817,32.194,36.304,36.378,37.255,275.925,288,4.29,30.625,30.973,34.92,34.987,35.818,53.1622,79.6142,80.9979,160.6120,223.2368,276.3989,302.8508,356.0129,383.8485};
+    
+    size_t Ba133_size = Ba133_intensities.size();
+    
+    
+    
+    
+    //generates source from vectors
+    
+    std::vector<double> cumulative_sums;
+    double sum_value = 0;
 
-double norm_rand = intensities_sum*G4UniformRand();
-   
-    if(0<norm_rand && norm_rand< 7.5*std::pow(10, -4)){
-	  fParticleGun->SetParticleEnergy(2158.57*keV);
+    for (size_t i = 0; i < Co60_size; ++i) {
+        double value = Co60_intensities[i];
+        sum_value += value;
+        cumulative_sums.push_back(sum_value);
     }
-	  
-   if(7.5*std::pow(10, -4)< norm_rand && norm_rand <  0.0078+ 7.5*std::pow(10, -4)){
-	  fParticleGun->SetParticleEnergy(826.10*keV);
-   }
-     if(0.0078+ 7.5*std::pow(10, -4)<norm_rand && norm_rand<0.0078+ 7.5*std::pow(10, -4) + 0.25){
-	  fParticleGun->SetParticleEnergy(1332.492*keV);
-     }
 
-  if(0.0078+ 7.5*std::pow(10, -4) + 0.25< norm_rand && norm_rand < 2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25){
-	  fParticleGun->SetParticleEnergy(58.603*keV);
-}
-	  
+    double cumulative_sum = cumulative_sums.back();
+    double norm_rand = cumulative_sum * G4UniformRand();
 
-// from data set 3
- if(2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25< norm_rand && norm_rand <   2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075){
-	  fParticleGun->SetParticleEnergy(347.14*keV);
- }
-	  
-	  
-if(2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 < norm_rand && norm_rand <   2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076){
-	  fParticleGun->SetParticleEnergy(826.10*keV);
-}
- 
- if(2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076< norm_rand && norm_rand <2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076 +  99.85){
-	  fParticleGun->SetParticleEnergy(1173.228*keV);
- }
- if(2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076 +  99.85< norm_rand && norm_rand < 2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076 +  99.85 +  99.9826){
-	  fParticleGun->SetParticleEnergy(1332.492*keV);
- }
-	  
-if(2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076 +  99.85 +  99.9826< norm_rand && norm_rand < 2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076 +  99.85 +  99.9826 + 0.00120){
-	  fParticleGun->SetParticleEnergy(2158.57*keV);
-}
+    for (size_t i = 0; i < Co60_size; ++i) {
+        if (i == 0 && 0 < norm_rand && norm_rand < Co60_intensities[0]) {
+            // Set the energy and exit the function
+            fParticleGun->SetParticleEnergy(Co60_energies[0] * keV);
+        } 
+        
+        else if (i > 0 && cumulative_sums[i - 1] < norm_rand && norm_rand < cumulative_sums[i]) {
+            // Set the energy and exit the function
+            fParticleGun->SetParticleEnergy(Co60_energies[i] * keV);
+        }
+    }
+
 
  
- if(2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076 +  99.85 +  99.9826 + 0.00120< norm_rand && norm_rand <   2.0601 + 0.0078+ 7.5*std::pow(10, -4) + 0.25 +0.0075 +0.0076 +  99.85 +  99.9826 + 0.00120 + 2*10*-6){
-	  fParticleGun->SetParticleEnergy(2505.692*keV);
- }
- 
-  //source position
-  G4double theta = (2*M_PI*G4UniformRand());
-  G4double phi = (M_PI*G4UniformRand());
-  G4double x = sin(theta)*cos(phi);
-  G4double y = sin(theta)*sin(phi);
-  G4double z = cos(theta);
- 
-  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(x,y,z));
+  // Isotropic Source
+  
+  //Code to cover total solid angle
+  
+ G4double cosTheta = 2*G4UniformRand() - 1., phi = CLHEP::twopi*G4UniformRand();
+  G4double sinTheta = std::sqrt(1. - cosTheta*cosTheta);
+  G4double ux = sinTheta*std::cos(phi),
+           uy = sinTheta*std::sin(phi),
+           uz = cosTheta;
+
+// Apply isotropic properties
+
+  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(ux,uy,uz));
   fParticleGun->GeneratePrimaryVertex(anEvent);
 }
-
+  
