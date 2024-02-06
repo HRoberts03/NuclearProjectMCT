@@ -31,6 +31,7 @@
 #include "B1EventAction.hh"
 #include "B1RunAction.hh"
 
+
 #include "G4Event.hh"
 #include "G4RunManager.hh"
 
@@ -62,9 +63,10 @@ void B1EventAction::EndOfEventAction(const G4Event* event)
 {   
   // accumulate statistics in run action
   fRunAction->AddEdep(fEdep);
-  if(fEdep>0.0){
-  G4cout << event->GetEventID() << " has " << fEdep*keV << " deposited in detectors " << G4endl;
-  }
+  // if(fEdep>0.0){
+  // G4cout << event->GetEventID() << " has " << fEdep*keV << " deposited in detectors " << G4endl;
+  // }
+  //std::cout << fEdep;
   fRunAction->AddEnergy(fEdep);
   
 }

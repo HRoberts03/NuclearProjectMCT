@@ -107,7 +107,7 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
     
     // Aliminium tube parameters
     G4double tube_outer_rad = 3.35*cm;  // is this right, should be a bit bigger?
-    G4double tube_hz = 12.15*cm;  // length is halved, not sure about this
+    G4double tube_hz = 12.12*cm;  // length is halved, not sure about this
     G4Material* tube_mat = nist->FindOrBuildMaterial("G4_Al"); // not sure about this
 
     // Create logical volume for the tube
@@ -192,7 +192,7 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
     new G4PVPlacement(0, G4ThreeVector(0, 0, 0), tube_log, "Al Tube", logicWorld, false, checkOverlaps);
     new G4PVPlacement(0, G4ThreeVector(0, 0, 0.02*cm), vacuum_log, "Vacuum", tube_log, false, checkOverlaps);
     new G4PVPlacement(0, G4ThreeVector(0, 0, 10.52*cm), crystal_log, "Ge Crystal", vacuum_log, false, checkOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(0, 0, 12.12*cm), window_log, "Window", tube_log, false, checkOverlaps);  // z is tube length - window thickness
+    new G4PVPlacement(0, G4ThreeVector(0, 0, 12.15*cm), window_log, "Window", logicWorld, false, checkOverlaps);  // z is tube length - window thickness
     new G4PVPlacement(0, G4ThreeVector(0, 0, 14.6*cm), glassA_log, "GlassA", logicWorld, false, checkOverlaps);
     new G4PVPlacement(0, G4ThreeVector(-10.5*cm, 0, 1.2*cm), glassB_log, "GlassB", logicWorld, false, checkOverlaps);
     new G4PVPlacement(GlassC_rot, G4ThreeVector(10.5*cm, 0, 1.2*cm), glassB_log, "GlassC", logicWorld, false, checkOverlaps);

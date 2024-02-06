@@ -49,6 +49,9 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
+std::vector <G4double> EnergyArrayRaw;
+  
+
 B1RunAction::B1RunAction()
 : G4UserRunAction()
   //fEdep("Edep", 0.),
@@ -89,9 +92,7 @@ void B1RunAction::BeginOfRunAction(const G4Run*)
   // reset parameters to their initial values
   //G4ParameterManager* parameterManager = G4ParameterManager::Instance();
   //parameterManager->Reset();
-  std::vector <G4double> EnergyArrayRaw;
-  std::ofstream myFile;
-    myFile.open("output.csv");
+  
 
 }
 
@@ -105,41 +106,45 @@ void B1RunAction::EndOfRunAction(const G4Run* run)
 // smears the data as a detector would
 G4double m = 10 * G4UniformRand();
 G4double c = 5 * G4UniformRand();
-std::vector <G4double> energiesLinearGain = m*EnergyArrayRaw + c;
+std::vector <G4double> energiesLinearGain;
+for(unsigned int i = 0; i<EnergyArrayRaw.size(); i++){
+  energiesLinearGain.push_back(m*EnergyArrayRaw[i] + c);
+};
+
 
 //finds max and min value of the smeared energy
 G4double maxE = energiesLinearGain[0];
-for(G4double i : energiesLinearGain){
-  if(i > maxE){
-    maxE = i;
+for(unsigned int i = 0; i<energiesLinearGain.size(); i++){
+  if(energiesLinearGain[i] > maxE){
+    maxE = energiesLinearGain[i];
   };
 };
 G4double minE = energiesLinearGain[0];
-for(G4double i : energiesLinearGain){
-  if(i < minE){
-    minE = i;
+for(unsigned int i = 0; i<energiesLinearGain.size(); i++){
+  if(energiesLinearGain[i] < minE){
+    minE = energiesLinearGain[i];
   };
 };
 
 //create the bins locations
 G4double rangeE = maxE - minE;
-int rangeEint = floor(rangeE);
-int Bins[rangeEint] ;
+int rangeEint = floor(rangeE)/2;
+std::vector <int> Bins;
 for(unsigned int i=0; i<rangeEint; i++){
-  Bins[i] = i;
+  Bins.push_back(i*2);
 };
 
 //turns all the energies to their bin values
 for(int i : Bins){
   int count =0;
 for(int j : energiesLinearGain){
-  if(abs(i-j)<0.5){
+  if(abs(i-j)<1){
     energiesLinearGain[count] = i;
     ++ count;
   };};};
 
 
-//create an array of unique energies. 
+//create a vector of unique energies. 
 std::vector <G4double> UniqueEnergies;
 UniqueEnergies.push_back(energiesLinearGain[0]);
 for(G4double i : energiesLinearGain){
@@ -149,15 +154,15 @@ for(G4double i : energiesLinearGain){
       Exists = true;
     };
   };
-  if(Exists == true){
+  if(Exists == false){
     UniqueEnergies.push_back(i);
   };
 };
 
-//gets the count rate.
+//gets the count rate of each energy.
 std::vector <G4double> CountRate;
 for(G4double i : UniqueEnergies){
-  count3 = 0;
+  int count3 = 0;
   for(G4double j : energiesLinearGain){
     if(i==j){
       ++ count3;
@@ -165,13 +170,24 @@ for(G4double i : UniqueEnergies){
   };
   CountRate.push_back(count3);
 };
+int zeroIndex = 0;
+for(unsigned int i = 0; i < UniqueEnergies.size(); i++){
+  if(UniqueEnergies[i]==0){
+    zeroIndex = i;
+    break;
+  };
+};
+UniqueEnergies.erase(UniqueEnergies.begin() + zeroIndex);
+CountRate.erase(CountRate.begin() + zeroIndex);
 
-  for(unsigned int i=0; i < CountRate.size(); i++){
-    //cout << EnergyArray[i] << "," << CountRate[i] << "\n";
-    myFile <<UniqueEnergies[i] << "," << CountRate[i] << "\n";
+std::ofstream myFile;
+    myFile.open("output1.csv");
+  for(unsigned int i=0; i < UniqueEnergies.size(); i++){
+    
+    myFile << UniqueEnergies[i] <<" " << CountRate[i]<< "\n";
    
 };
-  myfile.close()
+  myFile.close();
   
   // Merge parameters 
   //G4ParameterManager* parameterManager = G4ParameterManager::Instance();
@@ -213,11 +229,14 @@ void B1RunAction::AddEdep(G4double edep)
 {
 //  fEdep  += edepG4doubl;
 //  fEdep2 += edep*edepG4doubl;
-}
-void AddEnergy(G4double energy)
+};
+
+void B1RunAction::AddEnergy(G4double energy)
 {
   EnergyArrayRaw.push_back(energy);
 };
+  
+
 
 
 

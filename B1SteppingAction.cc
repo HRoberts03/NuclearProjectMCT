@@ -63,22 +63,22 @@ void B1SteppingAction::UserSteppingAction(const G4Step* step)
   G4int parentID = track->GetParentID();
  
   G4int pdgid = track->GetDynamicParticle()->GetPDGcode();
-  if(pdgid == 11)
-	  {
-		  G4cout << "electron detected" << G4endl;
-	}
+  // if(pdgid == 11)
+	//   {
+	// 	  G4cout << "electron detected" << G4endl;
+	// }
   // collect energy deposited in this step
   G4double edepStep = step->GetTotalEnergyDeposit();
 
 
   	G4String processName = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
 
-  	if(volume->GetName()=="New_Test_Object")
+  	if(volume->GetName()=="scintillator")
   	{
 		G4int copyNo = volume->GetCopyNo();
 
-	  G4cout << "the step is in volume = " << volume->GetName() << " copyNo = " << copyNo << ".\n"
-		 << "of type " << processName << " which deposits " << edepStep << " energy" << G4endl;
+	  // G4cout << "the step is in volume = " << volume->GetName() << " copyNo = " << copyNo << ".\n"
+		//  << "of type " << processName << " which deposits " << edepStep << " energy" << G4endl;
 	
 		fEventAction->AddEdep(edepStep);
 
