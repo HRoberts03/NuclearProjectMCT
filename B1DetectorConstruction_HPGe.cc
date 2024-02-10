@@ -29,8 +29,7 @@
 /// \brief Implementation of the B1DetectorConstruction class
 
 #include "B1DetectorConstruction.hh"
-#include "G4VisAttributes.hh"  // i put this
-
+#include "G4VisAttributes.hh"
 #include "G4RunManager.hh"
 #include "G4NistManager.hh"
 #include "G4Box.hh"
@@ -89,113 +88,117 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
                       false,                 //no boolean operation
                       0,                     //copy number
                       checkOverlaps);        //overlaps checking
-  
-
-	// Germanium crystal dimensions and material
-	G4double crystal_rad = 2.545*cm;
-	G4double crystal_hz = 1*cm;  // half (value of be2020)
-	G4double cavity_rad = 0.5*cm;  // guess
-	G4double cavity_hz = 0.15*cm;  // guess
+    
+    // Materials
+    G4Material* Al_mat = nist->FindOrBuildMaterial("G4_Al");
+    G4Material* vacuum_mat = nist->FindOrBuildMaterial("G4_Galactic");
     G4Material* crystal_mat = nist->FindOrBuildMaterial("G4_Ge");
+	G4Material* window_mat = nist->FindOrBuildMaterial("G4_C");
+	G4Material* glass_mat = nist->FindOrBuildMaterial("G4_PLEXIGLASS");
+    
+    // Aliminium housing parameters
+    G4double housing_rad = (67.0/2)*mm;
+    G4double housing_hz = (243.0/2)*mm;
+
+    // Vacuum parameters
+	G4double vacuum_rad = (66.0/2)*mm;  // accounting for 0.5 mm Al walls
+	G4double vacuum_hz = (242.0/2)*mm;
+
+	// Germanium crystal parameters
+	G4double crystal_rad = (50.90/2)*mm;
+	G4double crystal_hz = (20.0/2)*mm;
+	G4double cavity_rad = (10.0/2)*mm;  // guesstimate
+	G4double cavity_hz = (3.0/2)*mm;  // guesstimate
+
+    // Window parameters
+	G4double window_rad = (50.90/2)*mm;  // same as crystal (guess)
+	G4double window_hz = (0.60/2)*mm;
+
+	// Top glass parameters
+	G4double top_glass_x = (220.0/2)*mm;
+	G4double top_glass_y = (200.0/2)*mm;
+	G4double top_glass_z = (10.0/2)*mm;
+	G4double hole_rad = (80.0/2)*mm;
+	
+	// Side glass parameter
+	G4double side_glass_x = (10.0/2)*mm;
+	G4double side_glass_y = (200.0/2)*mm;
+	G4double side_glass_z = (258.0/2)*mm;
+	
+	G4double glass_end_x = (109.0/2)*mm;
+	G4double glass_end_y = (200.0/2)*mm;
+	G4double glass_end_z = (10.0/2)*mm;
+	
+    // ALuminium housing logical volume
+	G4Tubs* housing_shape = new G4Tubs("Housing_walls", 0, housing_rad, housing_hz, 0*deg, 360*deg);
+	G4LogicalVolume* housing_log = new G4LogicalVolume(housing_shape, Al_mat, "Housing_Log");
+	
+    // Vacuum in housing logical volume
+	G4Tubs* vacuum_shape = new G4Tubs("Vacuum", 0, vacuum_rad, vacuum_hz, 0*deg, 360*deg);
+	G4LogicalVolume* vacuum_log = new G4LogicalVolume(vacuum_shape, vacuum_mat, "VacuumLog");
     
     // Germanium crytal logical volume
-    G4Tubs* crystal_shape = new G4Tubs("Crystal", 0*cm, crystal_rad, crystal_hz, 0*deg, 360*deg);
-    
-    G4Tubs* cavity_shape = new G4Tubs("Cavity", 0*cm, cavity_rad, cavity_hz, 0*deg, 360*deg);
-    G4VSolid* subtract = new G4SubtractionSolid("Crystal-Cavity", crystal_shape, cavity_shape, 0, G4ThreeVector(0, 0, -0.84*cm));  //-0.85 cm is a guess from our cavity_hz guess
-    G4LogicalVolume* crystal_log = new G4LogicalVolume(subtract, crystal_mat, "Crystal_Log");
-    
-    // Aliminium tube parameters
-    G4double tube_outer_rad = 3.35*cm;
-    G4double tube_hz = 12.12*cm;
-    G4Material* tube_mat = nist->FindOrBuildMaterial("G4_Al");
-
-    // Create logical volume for the tube
-	G4Tubs* tube_shape = new G4Tubs("Tube", 0*cm, tube_outer_rad, tube_hz, 0*deg, 360*deg);
-	G4LogicalVolume* tube_log = new G4LogicalVolume(tube_shape, tube_mat, "TubeLog");
+    G4Tubs* crystal_tub_shape = new G4Tubs("Crystal_Tub", 0, crystal_rad, crystal_hz, 0*deg, 360*deg);
+    G4Tubs* cavity_shape = new G4Tubs("Cavity", 0, cavity_rad, cavity_hz, 0*deg, 360*deg);
+    G4VSolid* crystal_shape = new G4SubtractionSolid("Crystal", crystal_tub_shape, cavity_shape, 0, G4ThreeVector(0, 0, -crystal_hz+cavity_hz));
+    G4LogicalVolume* crystal_log = new G4LogicalVolume(crystal_shape, crystal_mat, "Crystal_Log");
 	
-	// Window parameters
-	G4double window_radius = 3.35*cm;  // same as tube
-	G4double window_hz = 0.03*cm;  // half
-	G4Material* window_mat = nist->FindOrBuildMaterial("G4_C");
+	// Window logical volume
+	G4Tubs* window_shape = new G4Tubs("Window", 0, window_rad, window_hz, 0*deg, 360*deg);
+	G4LogicalVolume* window_log = new G4LogicalVolume(window_shape, window_mat, "Window_Log");
 	
-	//Creates logical volume for the window
-	G4Tubs* window_shape = new G4Tubs("Window", 0*mm, window_radius, window_hz, 0*deg, 360*deg);
-	G4LogicalVolume* window_log = new G4LogicalVolume(window_shape, window_mat, "WindowLog");
+	// Top glass logical volume
+	G4Box* glass_plate_shape = new G4Box("Glass_Pate", top_glass_x, top_glass_y, top_glass_z);
+	G4Tubs* hole_shape = new G4Tubs("Hole", 0, hole_rad, top_glass_z+1*cm, 0*deg, 360*deg);
+    G4VSolid* top_glass_shape = new G4SubtractionSolid("Top_Glass", glass_plate_shape, hole_shape);
+	G4LogicalVolume* top_glass_log = new G4LogicalVolume(top_glass_shape, glass_mat, "Top_Glass_Log");
 	
-	
-	// Vacuum parameter
-	G4double vacuum_radius = 3.25*cm;  // accounting for 0.1cm Al walls
-	G4double vacuum_hz = 12.07*cm;
-	G4Material* vacuum_mat = nist->FindOrBuildMaterial("G4_Galactic");
-	
-	//Creates logical volume for vacuum
-	G4Tubs* vacuum_shape = new G4Tubs("Vacuum", 0*mm, vacuum_radius, vacuum_hz, 0*deg, 360*deg);
-	G4LogicalVolume* vacuum_log = new G4LogicalVolume(vacuum_shape, vacuum_mat, "VacuumLog");
-	
-	// GlassA parameter
-	G4double GlassA_x = 11*cm;
-	G4double GlassA_y = 10*cm;
-	G4double GlassA_z = 0.5*cm;
-	G4double hole_rad = 4*cm;
-	G4Material* glass_mat = nist->FindOrBuildMaterial("G4_PLEXIGLASS");
-	
-	//Create logical volume for GlassA
-	G4Box* glassA_shape = new G4Box("GlassA", GlassA_x, GlassA_y, GlassA_z);
-	
-	G4Tubs* hole_shape = new G4Tubs("Hole", 0*cm, hole_rad, GlassA_z+1*cm, 0*deg, 360*deg);
-    G4VSolid* glassA_new = new G4SubtractionSolid("Glass-Hole", glassA_shape, hole_shape);
-    
-	G4LogicalVolume* glassA_log = new G4LogicalVolume(glassA_new, glass_mat, "GlassALog");
-	
-	// GlassB parameter
-	G4double GlassB_x = 0.5*cm;
-	G4double GlassB_y = 10*cm;
-	G4double GlassB_z = 12.9*cm;
-	
-	G4double small_x = 5.45*cm;
-	G4double small_y = 10*cm;
-	G4double small_z = 0.5*cm;
-	
-	//Create logical volume for GlassB
-	G4Box* glassB_shape = new G4Box("GlassB", GlassB_x, GlassB_y, GlassB_z);
-	
-	G4Box* small_shape = new G4Box("Small", small_x, small_y, small_z);
-	G4VSolid* glassB_new = new G4UnionSolid("GlassB_fr", glassB_shape, small_shape, 0, G4ThreeVector(-4.95*cm, 0, -13.4*cm));
-	G4LogicalVolume* glassB_log = new G4LogicalVolume(glassB_new, glass_mat, "GlassBLog");
+	// Side glass logical volume
+	G4Box* side_plate_shape = new G4Box("Side_plate", side_glass_x, side_glass_y, side_glass_z);
+	G4Box* end_shape = new G4Box("Glass_end", glass_end_x, glass_end_y, glass_end_z);
+	G4VSolid* side_glass_shape = new G4UnionSolid("Side_glass", side_plate_shape, end_shape, 0, G4ThreeVector(-glass_end_x+side_glass_x, 0, -side_glass_z+glass_end_z));
+	G4LogicalVolume* side_glass_log = new G4LogicalVolume(side_glass_shape, glass_mat, "Side_Glass_Log");
 	
 	// Set visualization attributes for the materials
-    G4VisAttributes* crystalVisAtt = new G4VisAttributes(G4Colour(0.0, 1.0, 1.0));
-    crystal_log->SetVisAttributes(crystalVisAtt);
+	G4VisAttributes* housingVisAtt = new G4VisAttributes(G4Colour(1.0, 0.0, 0.0));
+	// housingVisAtt->SetForceSolid(true);
+    housing_log->SetVisAttributes(housingVisAtt);
     
     G4VisAttributes* vacuumVisAtt = new G4VisAttributes(G4Colour());
+    // vacuumVisAtt->SetForceSolid(true);
     vacuum_log->SetVisAttributes(vacuumVisAtt);
-
-    G4VisAttributes* tubeVisAtt = new G4VisAttributes(G4Colour(1.0, 0.0, 0.0));
-    tube_log->SetVisAttributes(tubeVisAtt);
+    
+    G4VisAttributes* crystalVisAtt = new G4VisAttributes(G4Colour(0.0, 1.0, 1.0));
+    crystalVisAtt->SetForceSolid(true);
+    crystal_log->SetVisAttributes(crystalVisAtt);
     
     G4VisAttributes* windowVisAtt = new G4VisAttributes(G4Colour(0.0, 0.0, 1.0));
+    windowVisAtt->SetForceSolid(true);
     window_log->SetVisAttributes(windowVisAtt);
     
-    G4VisAttributes* glassVisAtt = new G4VisAttributes(G4Colour(1.0, 1.0, 0.0));
-    glassA_log->SetVisAttributes(glassVisAtt);
-    
-    G4VisAttributes* glassBVisAtt = new G4VisAttributes(G4Colour(1.0, 0.0, 1.0));
-    glassB_log->SetVisAttributes(glassBVisAtt);
+    G4VisAttributes* glassVisAtt = new G4VisAttributes(G4Colour(1.0, 0.0, 1.0));
+    glassVisAtt->SetForceSolid(true);
+    top_glass_log->SetVisAttributes(glassVisAtt);
+    side_glass_log->SetVisAttributes(glassVisAtt);
     
 
 	// Place
+	G4double window_pos = housing_hz - window_hz;
+	G4double crys_pos = window_pos - window_hz - 5.50*mm - crystal_hz;
+	G4double top_glass_pos = housing_hz + 3.20*mm + top_glass_z;
+	G4double side_glass_pos_x = top_glass_x;
+	G4double side_glass_pos_z = top_glass_pos-side_glass_z+top_glass_z;
 	
-	G4RotationMatrix* GlassC_rot = new G4RotationMatrix();
-	GlassC_rot->rotateZ(180*deg);
+	G4RotationMatrix* side_glass_rot = new G4RotationMatrix();
+	side_glass_rot->rotateZ(180*deg);
 	
-    new G4PVPlacement(0, G4ThreeVector(0, 0, 0), tube_log, "Al_Tube", logicWorld, false, 0, checkOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(0, 0, 0.02*cm), vacuum_log, "Vacuum", tube_log, false, 0, checkOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(0, 0, 10.52*cm), crystal_log, "Ge_Crystal", vacuum_log, false, 0, checkOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(0, 0, 12.15*cm), window_log, "Window", logicWorld, false, 0, checkOverlaps);  // z is tube length - window thickness
-    new G4PVPlacement(0, G4ThreeVector(0, 0, 14.6*cm), glassA_log, "GlassA", logicWorld, false, 0, checkOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(-10.5*cm, 0, 1.2*cm), glassB_log, "GlassB", logicWorld, false, 0, checkOverlaps);
-    new G4PVPlacement(GlassC_rot, G4ThreeVector(10.5*cm, 0, 1.2*cm), glassB_log, "GlassC", logicWorld, false, 1, checkOverlaps);
+    new G4PVPlacement(0, G4ThreeVector(0, 0, 0), housing_log, "Al_Tube", logicWorld, false, 0, checkOverlaps);
+    new G4PVPlacement(0, G4ThreeVector(0, 0, 0), vacuum_log, "Vacuum", housing_log, false, 0, checkOverlaps);
+    new G4PVPlacement(0, G4ThreeVector(0, 0, crys_pos), crystal_log, "Ge_Crystal", vacuum_log, false, 0, checkOverlaps);
+    new G4PVPlacement(0, G4ThreeVector(0, 0, window_pos), window_log, "Window", housing_log, false, 0, checkOverlaps);  // z is tube length - window thickness
+    new G4PVPlacement(0, G4ThreeVector(0, 0, top_glass_pos), top_glass_log, "Top_Glass", logicWorld, false, 0, checkOverlaps);
+    new G4PVPlacement(0, G4ThreeVector(-side_glass_pos_x, 0, side_glass_pos_z), side_glass_log, "Side_Glass_A", logicWorld, false, 0, checkOverlaps);
+    new G4PVPlacement(side_glass_rot, G4ThreeVector(side_glass_pos_x, 0, side_glass_pos_z), side_glass_log, "Side_Glass_B", logicWorld, false, 1, checkOverlaps);
 
 
  //
