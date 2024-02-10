@@ -144,10 +144,10 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
     G4Material* Al_mat = nist->FindOrBuildMaterial("G4_Al");
     
     // Crystal housing (top-bottom of these volumes are the "front-back" of the detector)
-    G4double crystalAl_inner_rad = (22.0/2)*mm;
+    G4double crystalAl_inner_rad = (22.0/2)*mm;  // accounting for 0.5 mm thick walls
     G4double crystalAl_outer_rad = (23.0/2)*mm;
     G4double crystalAl_hz = (20.0/2)*mm;
-    G4double crystalAl_end_hz = (0.5/2)*mm;
+    G4double crystalAl_end_hz = (0.50/2)*mm;
     
     // Entrance window parameters
     G4double window_rad = (18.0/2)*mm;
@@ -168,18 +168,18 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
     G4double shield_hz = 87.0/2*mm;  // measured
     
     // Photomultiplier tube parameters
-    G4double pmt_rad = 28.5/2*mm;
+    G4double pmt_rad = 28.50/2*mm;
     G4double pmt_hz = 60.0/2*mm;
 
     // Vacuum inside pmt parameters
-    G4double pmt_vacuum_rad = 27.5/2*mm;
+    G4double pmt_vacuum_rad = 27.50/2*mm;
     G4double pmt_vacuum_hz = 59.0/2*mm;
 
     // Bottom Aluminium Housing
     G4double BottomAl_inner_rad = 38.0/2*mm;
     G4double BottomAl_outer_rad = 39.0/2*mm;
-    G4double BottomAl_hz = 25/2*mm;  // ((134-(87+20.5+1))-0.5), 0.5 subtracted to acocunt for thickness of end piece
-    G4double BottomAl_end_hz = 0.5/2*mm;
+    G4double BottomAl_hz = 25.0/2*mm;  // ((134-(87+20.5+1))-0.5), 0.5 subtracted to acocunt for thickness of end piece
+    G4double BottomAl_end_hz = 0.50/2*mm;
 
     // Crystal housing logical volume
     G4Tubs* crys_hous_shape = new G4Tubs("Crys_Housing", crystalAl_inner_rad, crystalAl_outer_rad, crystalAl_hz, 0*deg, 360*deg);
@@ -253,7 +253,7 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
 
 	// Place
 	G4double crys_housing_pos = ((crystal_hz-(crystalAl_hz+crystalAl_end_hz))+1);
-	G4double window_pos = (crystal_hz+0.5);
+	G4double window_pos = (crystal_hz+0.50);
 	G4double junction_pos = crys_housing_pos-(crystalAl_hz+junction_hz);
 	G4double shield_pos = junction_pos-(junction_hz+shield_hz);
 	G4double pmt_pos = -(crystal_hz+pmt_hz);
@@ -265,7 +265,7 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
 	new G4PVPlacement(0, G4ThreeVector(0, 0, junction_pos), junction_log, "Junction", crystal_log, false, 0, checkOverlaps);
 	new G4PVPlacement(0, G4ThreeVector(0, 0, shield_pos), shield_log, "Magnetic_Shield", crystal_log, false, 0, checkOverlaps);
 	new G4PVPlacement(0, G4ThreeVector(0, 0, pmt_pos), pmt_log, "PMT", crystal_log, false, 0, checkOverlaps);
-	new G4PVPlacement(0, G4ThreeVector(0, 0, -0.5*mm), vacuum_log, "Vacuum_in_PMT", pmt_log, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0, 0, -0.50*mm), vacuum_log, "Vacuum_in_PMT", pmt_log, false, 0, checkOverlaps);
 	new G4PVPlacement(0, G4ThreeVector(0, 0, bottom_pos), al_bottom_hous_log, "Bottom_Housing", logicWorld, false, 0, checkOverlaps);
 
     //
