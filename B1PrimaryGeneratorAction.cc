@@ -20,8 +20,11 @@
 
 using namespace std;
 
-B1PrimaryGeneratorAction::B1PrimaryGeneratorAction()
+int source;
+
+B1PrimaryGeneratorAction::B1PrimaryGeneratorAction(int sourceNum)
 {
+source = sourceNum;
   fGPS = new G4GeneralParticleSource();
   G4ParticleDefinition* gamma = G4ParticleTable::GetParticleTable()->FindParticle("gamma"); // gets gamma from source list
   fGPS->SetParticleDefinition(gamma); // sets particle to gamma
@@ -73,30 +76,117 @@ void B1PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
      // Calculate total intensity
     std::vector<double> cumulative_sums;
     double sum_value = 0;
+
+    std::vector<double> Intensities;
+    std::vector<double> Energies;
+
+if(source==1){
+      Intensities = Co60_intensities;
+      Energies = Co60_energies;
+    }
+    else if(source==2){
+      Intensities = Cs137_intensities;
+      Energies = Cs137_energies;
+    }
+    else if(source==3){
+      Intensities = Ba133_intensities;
+      Energies = Ba133_energies;
+    }
+    // else if(source==4){
+    //   Intensities = Ag108m_intensities;
+    //   Energies = Ag108m_energies;
+    // }
+    else{
+      Intensities = Co60_intensities;
+      Energies = Co60_energies;
+    }
+   
     // appends the cumalitive sum for the specific emmision
-    for (size_t i = 0; i < Co60_size; ++i) {
-        double value = Co60_intensities[i];
+    for (size_t i = 0; i < Intensities.size(); ++i) {
+        double value = Intensities[i];
         sum_value += value;
         cumulative_sums.push_back(sum_value);
     }
     // generates normalised random number for emission selection
     double cumulative_sum = cumulative_sums.back();
     double norm_rand = cumulative_sum * G4UniformRand();
+   
+   
+   // EPW: Implementing Ti-44 decay chain
+   
+    if (source == 5){
+        double Ti_rand = 100*G4UniformRand();
+        if (Ti_rand <= 99.8){
+            fGammaGPS->GetEneDist()->SetMonoEnergy(78.3*keV);
+            fGPS->GeneratePrimaryVertex(anEvent);
+            fGammaGPS->GetEneDist()->SetMonoEnergy(67.9*keV);
+            fGPS->GeneratePrimaryVertex(anEvent);
+        }
+        
+        else{
+            fGammaGPS->GetEneDist()->SetMonoEnergy(146.2*keV);
+            fGPS->GeneratePrimaryVertex(anEvent);
+        }
+   
+        double Sc_rand_i = 100*G4UniformRand();
+        double Sc_rand = G4UniformRand();
+        double annih_rand = 100*G4UniformRand();
+       
+       if (annih_rand>= 188.556/2){
+           fGammaGPS->GetEneDist()->SetMonoEnergy(511*keV);   
+           fGPS->GeneratePrimaryVertex(anEvent);
+        }
+        
+       if (Sc_rand_i <= 98.974){
+          fGammaGPS->GetEneDist()->SetMonoEnergy(1157*keV);
+          fGPS->GeneratePrimaryVertex(anEvent);
+        }
+       
+       else if (98.974 < Sc_rand_i && Sc_rand_i <= (98.974+1.021)){
+          if (Sc_rand <= (0.909/1.021)){
+              fGammaGPS->GetEneDist()->SetMonoEnergy(1499.4*keV);
+              fGPS->GeneratePrimaryVertex(anEvent);
+              fGammaGPS->GetEneDist()->SetMonoEnergy(1157*keV);
+              fGPS->GeneratePrimaryVertex(anEvent);
+             }
+          else{
+             fGammaGPS->GetEneDist()->SetMonoEnergy(2656.5*keV);
+             fGPS->GeneratePrimaryVertex(anEvent);
+          }
+        }
+        
+        else if((98.974+1.021) < Sc_rand_i && Sc_rand_i <= (98.974+1.021+0.0051)){
+           if(Sc_rand <= (0.0037/0.0051)){
+            fGammaGPS->GetEneDist()->SetMonoEnergy(2144.33*keV); 
+            fGPS->GeneratePrimaryVertex(anEvent);
+            fGammaGPS->GetEneDist()->SetMonoEnergy(1157*keV);
+            fGPS->GeneratePrimaryVertex(anEvent);
+           } 
+        
+            else{
+              fGammaGPS->GetEneDist()->SetMonoEnergy(3301.5*keV);  
+              fGPS->GeneratePrimaryVertex(anEvent);
+            }
+        }
+        
+    }
+   
     
     // source generation
    
-    for (size_t i = 0; i < Co60_size; ++i) {
-        if (i == 0 && 0 < norm_rand && norm_rand < Co60_intensities[0]) {
+    for (size_t i = 0; i < Intensities.size(); ++i) {
+        if (i == 0 && 0 < norm_rand && norm_rand < Intensities[0]) {
             // Set the energy and exit the function
-            fGammaGPS->GetEneDist()->SetMonoEnergy(Co60_energies[0]*keV);
+            fGammaGPS->GetEneDist()->SetMonoEnergy(Energies[0]*keV);
+            fGPS->GeneratePrimaryVertex(anEvent);
 
         } 
         
         else if (i > 0 && cumulative_sums[i - 1] < norm_rand && norm_rand < cumulative_sums[i]) {
             // Set the energy and exit the function
-             fGammaGPS->GetEneDist()->SetMonoEnergy(Co60_energies[i]*keV);
+             fGammaGPS->GetEneDist()->SetMonoEnergy(Energies[i]*keV);
+             fGPS->GeneratePrimaryVertex(anEvent);
         }
     }
-  // generate the selected event
-  fGPS->GeneratePrimaryVertex(anEvent);
+  
 }
