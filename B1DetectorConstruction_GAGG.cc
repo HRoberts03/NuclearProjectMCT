@@ -40,6 +40,7 @@
 #include "G4Sphere.hh"
 #include "G4Trd.hh"
 #include "G4LogicalVolume.hh"
+#include "G4MaterialTable.hh"
 #include "G4PVPlacement.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4Tubs.hh"
@@ -139,8 +140,17 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
     mu_metal->AddElement(carbon, 0.05 * perCent);
     mu_metal->AddElement(iron, 13.02* perCent);
 
+    // Define PMT material
     G4Material* pmt_mat = nist->FindOrBuildMaterial("G4_SILICON_DIOXIDE");
+    
+    G4MaterialPropertiesTable* pmt_properties = new G4MaterialPropertiesTable();
+    pmt_properties->AddConstProperty("EFFICIENCY", 0.26);
+    pmt_mat->SetMaterialPropertiesTable(pmt_properties);
+    
+    // Define vacuum material
     G4Material* vacuum_mat = nist->FindOrBuildMaterial("G4_Galactic");
+    
+    //Define aluminium material
     G4Material* Al_mat = nist->FindOrBuildMaterial("G4_Al");
     
     // Crystal housing (top-bottom of these volumes are the "front-back" of the detector)
