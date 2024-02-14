@@ -97,37 +97,37 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
 	G4Material* glass_mat = nist->FindOrBuildMaterial("G4_PLEXIGLASS");
     
     // Aliminium housing parameters
-    G4double housing_rad = (67.0/2)*mm;
-    G4double housing_hz = (243.0/2)*mm;
+    G4double housing_rad = (67.00/2)*mm;
+    G4double housing_hz = (243.00/2)*mm;
 
     // Vacuum parameters
-	G4double vacuum_rad = (66.0/2)*mm;  // accounting for 0.5 mm Al walls
-	G4double vacuum_hz = (242.0/2)*mm;
+	G4double vacuum_rad = (66.00/2)*mm;  // accounting for 0.5 mm Al walls
+	G4double vacuum_hz = (241.90/2)*mm;  // accounting for 0.5 mm Al wall at the back and 0.60 mm window at the front
 
 	// Germanium crystal parameters
 	G4double crystal_rad = (50.90/2)*mm;
-	G4double crystal_hz = (20.0/2)*mm;
-	G4double cavity_rad = (10.0/2)*mm;  // guesstimate
-	G4double cavity_hz = (3.0/2)*mm;  // guesstimate
+	G4double crystal_hz = (20.00/2)*mm;
+	G4double cavity_rad = (10.00/2)*mm;  // guesstimate
+	G4double cavity_hz = (3.00/2)*mm;  // guesstimate
 
     // Window parameters
-	G4double window_rad = (50.90/2)*mm;  // same as crystal (guess)
+	G4double window_rad = (67.00/2)*mm;  // same as crystal (guess)
 	G4double window_hz = (0.60/2)*mm;
 
 	// Top glass parameters
-	G4double top_glass_x = (220.0/2)*mm;
-	G4double top_glass_y = (200.0/2)*mm;
-	G4double top_glass_z = (10.0/2)*mm;
-	G4double hole_rad = (80.0/2)*mm;
+	G4double top_glass_x = (220.00/2)*mm;
+	G4double top_glass_y = (200.00/2)*mm;
+	G4double top_glass_z = (10.00/2)*mm;
+	G4double hole_rad = (80.00/2)*mm;
 	
 	// Side glass parameter
-	G4double side_glass_x = (10.0/2)*mm;
-	G4double side_glass_y = (200.0/2)*mm;
-	G4double side_glass_z = (258.0/2)*mm;
+	G4double side_glass_x = (10.00/2)*mm;
+	G4double side_glass_y = (200.00/2)*mm;
+	G4double side_glass_z = (258.00/2)*mm;
 	
-	G4double glass_end_x = (109.0/2)*mm;
-	G4double glass_end_y = (200.0/2)*mm;
-	G4double glass_end_z = (10.0/2)*mm;
+	G4double glass_end_x = (109.00/2)*mm;
+	G4double glass_end_y = (200.00/2)*mm;
+	G4double glass_end_z = (10.00/2)*mm;
 	
     // ALuminium housing logical volume
 	G4Tubs* housing_shape = new G4Tubs("Housing_walls", 0, housing_rad, housing_hz, 0*deg, 360*deg);
@@ -177,23 +177,27 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
     window_log->SetVisAttributes(windowVisAtt);
     
     G4VisAttributes* glassVisAtt = new G4VisAttributes(G4Colour(1.0, 0.0, 1.0));
-    glassVisAtt->SetForceSolid(true);
+    // glassVisAtt->SetForceSolid(true);
     top_glass_log->SetVisAttributes(glassVisAtt);
-    side_glass_log->SetVisAttributes(glassVisAtt);
+    // side_glass_log->SetVisAttributes(glassVisAtt);
+    
+    G4VisAttributes* side_glassVisAtt = new G4VisAttributes(G4Colour(0.0, 1.0, 1.0));
+    // glassVisAtt->SetForceSolid(true);
+    side_glass_log->SetVisAttributes(side_glassVisAtt);
     
 
 	// Place
 	G4double window_pos = housing_hz - window_hz;
 	G4double crys_pos = window_pos - window_hz - 5.50*mm - crystal_hz;
-	G4double top_glass_pos = housing_hz + 3.20*mm + top_glass_z;
-	G4double side_glass_pos_x = top_glass_x;
+	G4double top_glass_pos = housing_hz + 32.00*mm + top_glass_z;
+	G4double side_glass_pos_x = top_glass_x + side_glass_x;
 	G4double side_glass_pos_z = top_glass_pos-side_glass_z+top_glass_z;
 	
 	G4RotationMatrix* side_glass_rot = new G4RotationMatrix();
 	side_glass_rot->rotateZ(180*deg);
 	
     new G4PVPlacement(0, G4ThreeVector(0, 0, 0), housing_log, "Al_Tube", logicWorld, false, 0, checkOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(0, 0, 0), vacuum_log, "Vacuum", housing_log, false, 0, checkOverlaps);
+    new G4PVPlacement(0, G4ThreeVector(0, 0, -0.05*mm), vacuum_log, "Vacuum", housing_log, false, 0, checkOverlaps);
     new G4PVPlacement(0, G4ThreeVector(0, 0, crys_pos), crystal_log, "Ge_Crystal", vacuum_log, false, 0, checkOverlaps);
     new G4PVPlacement(0, G4ThreeVector(0, 0, window_pos), window_log, "Window", housing_log, false, 0, checkOverlaps);  // z is tube length - window thickness
     new G4PVPlacement(0, G4ThreeVector(0, 0, top_glass_pos), top_glass_log, "Top_Glass", logicWorld, false, 0, checkOverlaps);
