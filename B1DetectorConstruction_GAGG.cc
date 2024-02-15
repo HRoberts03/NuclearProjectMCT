@@ -150,52 +150,58 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
     // Define vacuum material
     G4Material* vacuum_mat = nist->FindOrBuildMaterial("G4_Galactic");
     
-    //Define aluminium material
+    // Define aluminium material
     G4Material* Al_mat = nist->FindOrBuildMaterial("G4_Al");
     
-    // Crystal housing (top-bottom of these volumes are the "front-back" of the detector)
-    G4double crystalAl_inner_rad = (22.0/2)*mm;  // accounting for 0.5 mm thick walls
-    G4double crystalAl_outer_rad = (23.0/2)*mm;
-    G4double crystalAl_hz = (20.0/2)*mm;
-    G4double crystalAl_end_hz = (0.50/2)*mm;
+    // Define air material
+    G4Material* air_mat = nist->FindOrBuildMaterial("G4_AIR");
     
-    // Entrance window parameters
-    G4double window_rad = (18.0/2)*mm;
-    G4double window_hz = (18.0/2)*um;
+    // Air parameters
+    G4double air_rad = 45.00/2.*mm;
+    G4double air_hz = 140.00/2.*mm;
     
     // Crystal parameters
-    G4double crystal_rad = 18.0/2*mm;
-    G4double crystal_hz = 25.0/2*mm;
+    G4double crystal_rad = 18.00/2.*mm;
+    G4double crystal_hz = 25.00/2.*mm;
+
+    // Crystal housing (top-bottom of these volumes are the "front-back" of the detector)
+    G4double crystalAl_outer_rad = (23.00/2.)*mm;
+    G4double crystalAl_hz = (20.50/2.)*mm;
+
+    // Entrance window parameters
+    G4double window_rad = (18.00/2.)*mm;
+    G4double window_hz = (18.00/2.)*um;
     
     // Al junction between magnetic metal shield and crystal housing
-    G4double junction_inner_rad = 22.0/2*mm;
-    G4double junction_outer_rad = 39.0/2*mm;
-    G4double junction_hz = 1.0/2*mm;  // measured
+    G4double junction_outer_rad = 39.00/2*mm;
+    G4double junction_hz = 5.50/2.*mm;  // measured
 
     // Magnetic Sheild parameters
-    G4double shield_inner_rad = ((39.0/2)-0.64)*mm;  // accounting for thickness of shield walls (0.64mm)
-    G4double shield_outer_rad = 39.0/2*mm;
-    G4double shield_hz = 87.0/2*mm;  // measured
+    G4double shield_inner_rad = ((39.00/2)-0.64)*mm;  // accounting for thickness of shield walls (0.64mm)
+    G4double shield_outer_rad = 39.00/2*mm;
+    G4double shield_hz = 87.00/2*mm;  // measured
     
     // Photomultiplier tube parameters
     G4double pmt_rad = 28.50/2*mm;
-    G4double pmt_hz = 60.0/2*mm;
+    G4double pmt_hz = 60.00/2*mm;
 
     // Vacuum inside pmt parameters
     G4double pmt_vacuum_rad = 27.50/2*mm;
-    G4double pmt_vacuum_hz = 59.0/2*mm;
+    G4double pmt_vacuum_hz = 59.00/2*mm;
 
     // Bottom Aluminium Housing
-    G4double BottomAl_inner_rad = 38.0/2*mm;
-    G4double BottomAl_outer_rad = 39.0/2*mm;
-    G4double BottomAl_hz = 25.0/2*mm;  // ((134-(87+20.5+1))-0.5), 0.5 subtracted to acocunt for thickness of end piece
+    G4double BottomAl_inner_rad = 38.00/2*mm;
+    G4double BottomAl_outer_rad = 39.00/2*mm;
+    G4double BottomAl_hz = 25.00/2*mm;  // ((134-(87+20.5+1))-0.5), 0.5 subtracted to acocunt for thickness of end piece
     G4double BottomAl_end_hz = 0.50/2*mm;
+    
+    // Air logical volume
+    G4Tubs* air_shape = new G4Tubs("Air_shape", 0, air_rad, air_hz, 0*deg, 360*deg);
+    G4LogicalVolume* air_log = new G4LogicalVolume(air_shape, air_mat, "Air_Log");
 
     // Crystal housing logical volume
-    G4Tubs* crys_hous_shape = new G4Tubs("Crys_Housing", crystalAl_inner_rad, crystalAl_outer_rad, crystalAl_hz, 0*deg, 360*deg);
-    G4Tubs* crys_hous_end_shape = new G4Tubs("Crys_Hous_End", 0, crystalAl_outer_rad, crystalAl_end_hz, 0*deg, 360*deg);
-    G4VSolid* crystal_housing = new G4UnionSolid("Crystal_Housing", crys_hous_shape, crys_hous_end_shape, 0, G4ThreeVector(0, 0, (crystalAl_hz+crystalAl_end_hz)*mm));
-    G4LogicalVolume* crys_housing_log = new G4LogicalVolume(crystal_housing, Al_mat, "Crys_Housing_Log");
+    G4Tubs* crys_housing = new G4Tubs("Crys_Housing", crystal_rad, crystalAl_outer_rad, crystalAl_hz, 0*deg, 360*deg);
+    G4LogicalVolume* crys_housing_log = new G4LogicalVolume(crys_housing, Al_mat, "Crys_Housing_Log");
     
     // Entrance window logical volume
     G4Tubs* window_shape = new G4Tubs("Window", 0, window_rad, window_hz, 0*deg, 360*deg);
@@ -206,7 +212,7 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
     G4LogicalVolume* crystal_log = new G4LogicalVolume(crystal_shape, GAGGCe, "GAGG_Ce_Crystal");
     
     // Al junction logical volume
-    G4Tubs* junction_shape = new G4Tubs("Junction", junction_inner_rad, junction_outer_rad, junction_hz, 0*deg, 360*deg);
+    G4Tubs* junction_shape = new G4Tubs("Junction", crystal_rad, junction_outer_rad, junction_hz, 0*deg, 360*deg);
     G4LogicalVolume* junction_log = new G4LogicalVolume(junction_shape, Al_mat, "Junction");
 
     // Magnetic Shield logical volume
@@ -224,12 +230,12 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
     // Bottom Al housing logical volume
     G4Tubs* al_housing_walls_shape = new G4Tubs("Bottom_Al_Walls", BottomAl_inner_rad, BottomAl_outer_rad, BottomAl_hz, 0*deg, 360*deg);
     G4Tubs* al_housing_end_shape = new G4Tubs("Bottom_Al_end", 0, BottomAl_outer_rad, BottomAl_end_hz, 0*deg, 360*deg);
-    G4VSolid* bottom_al_shape = new G4UnionSolid("Bottom_Al_housing", al_housing_walls_shape, al_housing_end_shape, 0, G4ThreeVector(0, 0, (-BottomAl_hz-BottomAl_end_hz)*mm));
+    G4VSolid* bottom_al_shape = new G4UnionSolid("Bottom_Al_housing", al_housing_walls_shape, al_housing_end_shape, 0, G4ThreeVector(0., 0., (-BottomAl_hz-BottomAl_end_hz)*mm));
     G4LogicalVolume* al_bottom_hous_log = new G4LogicalVolume(bottom_al_shape, Al_mat, "Al_bottom");
 
     // Set visualization attributes for the materials
     G4VisAttributes* crys_housingVisAtt = new G4VisAttributes(G4Colour(1.0, 0.0, 0.0));
-    crys_housingVisAtt->SetForceSolid(true);
+    crys_housingVisAtt->SetForceSolid(false);
     crys_housing_log->SetVisAttributes(crys_housingVisAtt);
     
     G4VisAttributes* windowVisAtt = new G4VisAttributes(G4Colour(0.0, 1.0, 0.0));
@@ -245,11 +251,11 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
     junction_log->SetVisAttributes(junctionVisAtt);
     
     G4VisAttributes* shieldVisAtt = new G4VisAttributes(G4Colour(1.0, 1.0, 0.0));
-    shieldVisAtt->SetForceSolid(true);
+    // shieldVisAtt->SetForceSolid(true);
     shield_log->SetVisAttributes(shieldVisAtt);
     
     G4VisAttributes* pmtVisAtt = new G4VisAttributes(G4Colour(0.0, 1.0, 1.0));
-    pmtVisAtt->SetForceSolid(true);
+    // pmtVisAtt->SetForceSolid(true);
     pmt_log->SetVisAttributes(pmtVisAtt);
 
     G4VisAttributes* vacuumVisAtt = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
@@ -259,24 +265,30 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
     G4VisAttributes* al_bottomVisAtt = new G4VisAttributes(G4Colour(1.0, 0.0, 0.0));
     al_bottomVisAtt->SetForceSolid(true);
     al_bottom_hous_log->SetVisAttributes(al_bottomVisAtt);
+    
+    G4VisAttributes* airVisAtt = new G4VisAttributes(G4Colour(1.0, 1.0, 1.0));
+    airVisAtt->SetForceWireframe(true);
+    air_log->SetVisAttributes(airVisAtt);
 
 
 	// Place
-	G4double crys_housing_pos = ((crystal_hz-(crystalAl_hz+crystalAl_end_hz))+1);
-	G4double window_pos = (crystal_hz+0.50);
-	G4double junction_pos = crys_housing_pos-(crystalAl_hz+junction_hz);
+	G4double housing_shift = (air_hz-crystalAl_hz);
+	G4double crystal_pos = housing_shift + crystalAl_hz - crystal_hz -1.00*mm;
+	G4double window_pos = crystal_pos + crystal_hz + window_hz;
+	G4double junction_pos = housing_shift-(crystalAl_hz+junction_hz);
 	G4double shield_pos = junction_pos-(junction_hz+shield_hz);
-	G4double pmt_pos = -(crystal_hz+pmt_hz);
+	G4double pmt_pos = crystal_pos-crystal_hz-pmt_hz;
 	G4double bottom_pos = shield_pos-(shield_hz+BottomAl_hz);
-	
-	new G4PVPlacement(0, G4ThreeVector(0, 0, 0), crystal_log, "Crystal", logicWorld, false, 0, checkOverlaps);
-	new G4PVPlacement(0, G4ThreeVector(0, 0, crys_housing_pos), crys_housing_log, "Crystal_Housing", crystal_log, false, 0, checkOverlaps);  // +1mm accounts for thickness of the housing wall and a guesstimate of length between crystal and hosuing
-	new G4PVPlacement(0, G4ThreeVector(0, 0, window_pos), window_log, "Window", logicWorld, false, 0, checkOverlaps);
-	new G4PVPlacement(0, G4ThreeVector(0, 0, junction_pos), junction_log, "Junction", crystal_log, false, 0, checkOverlaps);
-	new G4PVPlacement(0, G4ThreeVector(0, 0, shield_pos), shield_log, "Magnetic_Shield", crystal_log, false, 0, checkOverlaps);
-	new G4PVPlacement(0, G4ThreeVector(0, 0, pmt_pos), pmt_log, "PMT", crystal_log, false, 0, checkOverlaps);
-	new G4PVPlacement(0, G4ThreeVector(0, 0, -0.50*mm), vacuum_log, "Vacuum_in_PMT", pmt_log, false, 0, checkOverlaps);
-	new G4PVPlacement(0, G4ThreeVector(0, 0, bottom_pos), al_bottom_hous_log, "Bottom_Housing", logicWorld, false, 0, checkOverlaps);
+
+	new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), air_log, "Air_Parent", logicWorld, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0., 0., crystal_pos), crystal_log, "Crystal", air_log, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0., 0., housing_shift), crys_housing_log, "Crystal_Housing", air_log, false, 0, checkOverlaps);
+    new G4PVPlacement(0, G4ThreeVector(0., 0., window_pos), window_log, "Window", air_log, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0., 0., junction_pos), junction_log, "Junction", air_log, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0., 0., shield_pos), shield_log, "Magnetic_Shield", air_log, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0., 0., pmt_pos), pmt_log, "PMT", air_log, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), vacuum_log, "Vacuum_in_PMT", pmt_log, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0., 0., bottom_pos), al_bottom_hous_log, "Bottom_Housing", air_log, false, 0, checkOverlaps);
 
     //
   //always return the physical World
