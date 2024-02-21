@@ -28,7 +28,7 @@
 /// \file B1DetectorConstruction.cc
 /// \Constructing GAGG detector
 
-#include "B1DetectorConstruction.hh"
+#include "B1DetectorConstruction_GAGG.hh"
 #include "G4VisAttributes.hh"
 #include "G4RunManager.hh"
 #include "G4Element.hh"
@@ -49,7 +49,7 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-B1DetectorConstruction::B1DetectorConstruction()
+B1DetectorConstruction_GAGG::B1DetectorConstruction_GAGG()
 : G4VUserDetectorConstruction(),
   fScoringVolume(0)
 { 
@@ -59,12 +59,12 @@ B1DetectorConstruction::B1DetectorConstruction()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-B1DetectorConstruction::~B1DetectorConstruction()
+B1DetectorConstruction_GAGG::~B1DetectorConstruction_GAGG()
 { }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4VPhysicalVolume* B1DetectorConstruction::Construct()
+G4VPhysicalVolume* B1DetectorConstruction_GAGG::Construct()
 {  
   // Get nist material manager
   G4NistManager* nist = G4NistManager::Instance();
@@ -76,8 +76,8 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
   //     
   // World
   //
-  G4double world_sizeXY = 50*cm;
-  G4double world_sizeZ  = 50*cm;
+  G4double world_sizeXY = 500*cm;
+  G4double world_sizeZ  = 500*cm;
   G4Material* world_mat = nist->FindOrBuildMaterial("G4_AIR");
   
   G4Box* solidWorld = new G4Box("World",0.5*world_sizeXY, 0.5*world_sizeXY, 0.5*world_sizeZ);     //its size
@@ -279,8 +279,9 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
 	G4double shield_pos = junction_pos-(junction_hz+shield_hz);
 	G4double pmt_pos = crystal_pos-crystal_hz-pmt_hz;
 	G4double bottom_pos = shield_pos-(shield_hz+BottomAl_hz);
+	G4double offset = 200.00*mm;
 
-	new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), air_log, "Air_Parent", logicWorld, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0., 0., offset), air_log, "Air_Parent", logicWorld, false, 0, checkOverlaps);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., crystal_pos), crystal_log, "Crystal", air_log, false, 0, checkOverlaps);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., housing_shift), crys_housing_log, "Crystal_Housing", air_log, false, 0, checkOverlaps);
     new G4PVPlacement(0, G4ThreeVector(0., 0., window_pos), window_log, "Window", air_log, false, 0, checkOverlaps);

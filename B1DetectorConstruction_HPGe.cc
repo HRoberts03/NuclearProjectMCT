@@ -28,7 +28,7 @@
 /// \file B1DetectorConstruction.cc
 /// \brief Implementation of the B1DetectorConstruction class
 
-#include "B1DetectorConstruction.hh"
+#include "B1DetectorConstruction_HPGe.hh"
 #include "G4VisAttributes.hh"
 #include "G4RunManager.hh"
 #include "G4NistManager.hh"
@@ -46,7 +46,7 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-B1DetectorConstruction::B1DetectorConstruction()
+B1DetectorConstruction_HPGe::B1DetectorConstruction_HPGe()
 : G4VUserDetectorConstruction(),
   fScoringVolume(0)
 { 
@@ -56,12 +56,12 @@ B1DetectorConstruction::B1DetectorConstruction()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-B1DetectorConstruction::~B1DetectorConstruction()
+B1DetectorConstruction_HPGe::~B1DetectorConstruction_HPGe()
 { }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4VPhysicalVolume* B1DetectorConstruction::Construct()
+G4VPhysicalVolume* B1DetectorConstruction_HPGe::Construct()
 {  
   // Get nist material manager
   G4NistManager* nist = G4NistManager::Instance();
@@ -73,8 +73,8 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
   //     
   // World
   //
-  G4double world_sizeXY = 50*cm;
-  G4double world_sizeZ  = 50*cm;
+  G4double world_sizeXY = 500*cm;
+  G4double world_sizeZ  = 500*cm;
   G4Material* world_mat = nist->FindOrBuildMaterial("G4_AIR");
   
   G4Box* solidWorld = new G4Box("World",0.5*world_sizeXY, 0.5*world_sizeXY, 0.5*world_sizeZ);     //its size
@@ -192,17 +192,18 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
 	G4double top_glass_pos = housing_hz + 32.00*mm + top_glass_z;
 	G4double side_glass_pos_x = top_glass_x + side_glass_x;
 	G4double side_glass_pos_z = top_glass_pos-side_glass_z+top_glass_z;
+    G4double offset = 200.00*mm;
 	
 	G4RotationMatrix* side_glass_rot = new G4RotationMatrix();
 	side_glass_rot->rotateZ(180*deg);
 	
-    new G4PVPlacement(0, G4ThreeVector(0, 0, 0), housing_log, "Al_Tube", logicWorld, false, 0, checkOverlaps);
+    new G4PVPlacement(0, G4ThreeVector(0, 0, offset), housing_log, "Al_Tube", logicWorld, false, 0, checkOverlaps);
     new G4PVPlacement(0, G4ThreeVector(0, 0, -0.05*mm), vacuum_log, "Vacuum", housing_log, false, 0, checkOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(0, 0, crys_pos), crystal_log, "Ge_Crystal", vacuum_log, false, 0, checkOverlaps);
+    new G4PVPlacement(0, G4ThreeVector(0, 0, crys_pos), crystal_log, "Crystal", vacuum_log, false, 0, checkOverlaps);
     new G4PVPlacement(0, G4ThreeVector(0, 0, window_pos), window_log, "Window", housing_log, false, 0, checkOverlaps);  // z is tube length - window thickness
-    new G4PVPlacement(0, G4ThreeVector(0, 0, top_glass_pos), top_glass_log, "Top_Glass", logicWorld, false, 0, checkOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(-side_glass_pos_x, 0, side_glass_pos_z), side_glass_log, "Side_Glass_A", logicWorld, false, 0, checkOverlaps);
-    new G4PVPlacement(side_glass_rot, G4ThreeVector(side_glass_pos_x, 0, side_glass_pos_z), side_glass_log, "Side_Glass_B", logicWorld, false, 1, checkOverlaps);
+    new G4PVPlacement(0, G4ThreeVector(0, 0, offset + top_glass_pos), top_glass_log, "Top_Glass", logicWorld, false, 0, checkOverlaps);
+    new G4PVPlacement(0, G4ThreeVector(-side_glass_pos_x, 0, offset + side_glass_pos_z), side_glass_log, "Side_Glass_A", logicWorld, false, 0, checkOverlaps);
+    new G4PVPlacement(side_glass_rot, G4ThreeVector(side_glass_pos_x, 0, offset + side_glass_pos_z), side_glass_log, "Side_Glass_B", logicWorld, false, 1, checkOverlaps);
 
 
  //
