@@ -28,7 +28,7 @@
 /// \file B1DetectorConstruction.cc
 /// \brief Implementation of the B1DetectorConstruction class
 
-#include "B1DetectorConstruction_HPGe.hh"
+#include "B1DetectorConstruction_HPGe_Shipping_Container.hh"
 #include "G4VisAttributes.hh"
 #include "G4RunManager.hh"
 #include "G4NistManager.hh"
@@ -46,7 +46,7 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-B1DetectorConstruction_HPGe::B1DetectorConstruction_HPGe()
+B1DetectorConstruction_HPGe_Shipping_Container::B1DetectorConstruction_HPGe_Shipping_Container()
 : G4VUserDetectorConstruction(),
   fScoringVolume(0)
 { 
@@ -56,12 +56,12 @@ B1DetectorConstruction_HPGe::B1DetectorConstruction_HPGe()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-B1DetectorConstruction_HPGe::~B1DetectorConstruction_HPGe()
+B1DetectorConstruction_HPGe_Shipping_Container::~B1DetectorConstruction_HPGe_Shipping_Container()
 { }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4VPhysicalVolume* B1DetectorConstruction_HPGe::Construct()
+G4VPhysicalVolume* B1DetectorConstruction_HPGe_Shipping_Container::Construct()
 {  
   // Get nist material manager
   G4NistManager* nist = G4NistManager::Instance();
@@ -89,6 +89,82 @@ G4VPhysicalVolume* B1DetectorConstruction_HPGe::Construct()
                       0,                     //copy number
                       checkOverlaps);        //overlaps checking
     
+        //Defining Stainless Steel (Corten)
+    G4Element* aluminium = nist->FindOrBuildElement("Al");
+    G4Element* carbon = nist->FindOrBuildElement("C");
+    G4Element* manganese = nist->FindOrBuildElement("Mn");
+    G4Element* phosphorus = nist->FindOrBuildElement("P");
+    G4Element* silicon = nist->FindOrBuildElement("S");
+    G4Element* copper = nist->FindOrBuildElement("Cu");
+    G4Element* chromium = nist->FindOrBuildElement("Cr");
+    G4Element* nickel = nist->FindOrBuildElement("Ni");
+    G4Element* iron = nist->FindOrBuildElement("Fe");
+    
+    G4Material* stainless_steel = new G4Material("stainless_steel", 8.04 * kg / m3, 9, kStateSolid);
+    stainless_steel->AddElement(aluminium,  0.015/26.981539* perCent);
+    stainless_steel->AddElement(carbon,  0.12/12* perCent);
+    stainless_steel->AddElement(manganese,  0.2/54.938044* perCent);
+    stainless_steel->AddElement(silicon,  0.030/28.0855* perCent);
+    stainless_steel->AddElement(phosphorus,  0.07/30.973762* perCent);
+    stainless_steel->AddElement(copper,  0.25/63.546* perCent);
+    stainless_steel->AddElement(chromium,  0.5/51.9961* perCent);
+    stainless_steel->AddElement(nickel,  0.65/58.6934* perCent);
+    
+    G4double percent_iron = 100 - (0.015/26.981539 + 0.12/12 + 0.2/54.938044 + 0.030/28.0855 + 0.07/30.973762 + 0.25/63.546 +  0.5/51.9961 + 0.65/58.6934);
+    stainless_steel->AddElement(iron,  percent_iron* perCent);
+
+
+    
+    //Shipping Container Volume
+    
+    G4double container_sizeX = 6.05*m;
+    G4double container_sizeZ = 2.44*m;
+    G4double container_sizeY = 2.59*m;
+    
+    G4Material* container_mat = nist->FindOrBuildMaterial("stainless_steel");
+    G4Box* containerWalls = new G4Box("container",0.5*container_sizeX, 0.5*container_sizeY, 0.5*container_sizeZ);     //its size
+    
+    // Cavity Volume
+    
+    G4double cavity_sizeX = 5.44*m;
+    G4double cavity_sizeZ = 2.28*m;
+    G4double cavity_sizeY = 2.26*m;
+    
+    G4Box* cavityWalls = new G4Box("cavity",0.5*cavity_sizeX, 0.5*cavity_sizeY, 0.5*cavity_sizeZ); 
+   // G4LogicalVolume* cavity_log = new G4LogicalVolume(cavityWalls, "G4_AIR", "cavity"); //its name
+    
+    G4VSolid* container_total = new G4SubtractionSolid("container_total", containerWalls, cavityWalls);
+    G4ThreeVector container_pos = G4ThreeVector(0,0,0);
+    
+    
+    // Creating the Container w/o Wooden Floor
+    
+    // G4VPhysicalVolume* wall_physical = new G4PVPlacement(0, wall_pos, "wall", logicwalls, physWorld, false, 0, checkOverlaps);
+    G4LogicalVolume* container_log = new G4LogicalVolume(container_total, container_mat, "container_total");
+    G4VisAttributes* ContainerVisAtt = new G4VisAttributes(G4Colour(1.0, 0.0, 0.0));
+    ContainerVisAtt->SetForceSolid(false);
+    container_log->SetVisAttributes(ContainerVisAtt);
+    
+    G4VPhysicalVolume* container_physical = new G4PVPlacement(0, container_pos, container_log, "container_total", logicWorld, false, 0, checkOverlaps);	
+    
+    // Wooden Floor Volume
+    
+    G4double table_sizeX = 544*cm;
+    G4double table_sizeY = 16.5*cm;
+    G4double table_sizeZ  = 228*cm;
+    G4Material* table_mat = nist->FindOrBuildMaterial("G4_CELLULOSE_BUTYRATE");
+    G4Box* tableWalls = new G4Box("table",0.5*table_sizeX, 0.5*table_sizeY, 0.5*table_sizeZ);     //its size
+    G4LogicalVolume* table_log = new G4LogicalVolume(tableWalls, table_mat, "table"); //its name
+    
+    
+    G4double table_shift = - (cavity_sizeY + table_sizeY)*0.5;
+    G4ThreeVector table_pos = G4ThreeVector(0, table_shift,0);
+    
+    G4VPhysicalVolume* table_physical = new G4PVPlacement(0, table_pos, table_log, "table", container_log, false, 0, checkOverlaps);	
+    G4VisAttributes* tableVisAtt = new G4VisAttributes(G4Colour(0.0, 0.0, 1.0));
+    tableVisAtt->SetForceSolid(true);
+    table_log->SetVisAttributes(tableVisAtt);
+    
     // Materials
     G4Material* Al_mat = nist->FindOrBuildMaterial("G4_Al");
     G4Material* vacuum_mat = nist->FindOrBuildMaterial("G4_Galactic");
@@ -114,7 +190,7 @@ G4VPhysicalVolume* B1DetectorConstruction_HPGe::Construct()
 	G4double window_rad = (67.00/2)*mm;  // same as crystal (guess)
 	G4double window_hz = (0.60/2)*mm;
 
-	// Top glass parameters
+	// Top glass parametersta
 	G4double top_glass_x = (220.00/2)*mm;
 	G4double top_glass_y = (200.00/2)*mm;
 	G4double top_glass_z = (10.00/2)*mm;
