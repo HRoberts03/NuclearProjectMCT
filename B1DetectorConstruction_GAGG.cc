@@ -76,8 +76,8 @@ G4VPhysicalVolume* B1DetectorConstruction_GAGG::Construct()
   //     
   // World
   //
-  G4double world_sizeXY = 500*cm;
-  G4double world_sizeZ  = 500*cm;
+  G4double world_sizeXY = 1000*cm;
+  G4double world_sizeZ  = 1000*cm;
   G4Material* world_mat = nist->FindOrBuildMaterial("G4_AIR");
   
   G4Box* solidWorld = new G4Box("World",0.5*world_sizeXY, 0.5*world_sizeXY, 0.5*world_sizeZ);     //its size
@@ -156,9 +156,25 @@ G4VPhysicalVolume* B1DetectorConstruction_GAGG::Construct()
     // Define air material
     G4Material* air_mat = nist->FindOrBuildMaterial("G4_AIR");
     
+    // Lollipop material
+    G4Material* lollipop_mat = nist->FindOrBuildMaterial("G4_PLEXIGLASS");
+    
+    // Shielding material
+    // G4Material* lead_shielding_mat = nist->FindOrBuildMaterial("G4_Pb");
+    
+    // Wall material
+    G4Material* wall_mat = nist->FindOrBuildMaterial("G4_CONCRETE");
+    
+    // Table material
+    G4Material* table_mat = nist->FindOrBuildMaterial("G4_CELLULOSE_BUTYRATE");
+    
     // Air parameters
-    G4double air_rad = 45.00/2.*mm;
-    G4double air_hz = 140.00/2.*mm;
+    G4double air_XY = (450.00/2.)*cm;
+    G4double air_Z = (450.00/2.)*cm;
+    
+    // Wall parameters
+    G4double wall_sizeXY = (500.00/2.)*cm;
+    G4double wall_sizeZ  = (500.00/2.)*cm;
     
     // Crystal parameters
     G4double crystal_rad = 18.00/2.*mm;
@@ -189,15 +205,37 @@ G4VPhysicalVolume* B1DetectorConstruction_GAGG::Construct()
     G4double pmt_vacuum_rad = 27.50/2*mm;
     G4double pmt_vacuum_hz = 59.00/2*mm;
 
-    // Bottom Aluminium Housing
+    // Bottom Aluminium Housing parameters
     G4double BottomAl_inner_rad = 38.00/2*mm;
     G4double BottomAl_outer_rad = 39.00/2*mm;
     G4double BottomAl_hz = 25.00/2*mm;  // ((134-(87+20.5+1))-0.5), 0.5 subtracted to acocunt for thickness of end piece
     G4double BottomAl_end_hz = 0.50/2*mm;
     
+    // Lollipop parameter
+	G4double lollipop_house_x = (29.50/2)*mm;
+	G4double lollipop_house_y = (39.00/2)*mm;
+	G4double lollipop_house_z = (9.00/2)*mm;
+	
+	G4double lollipop_leg_x = (9.00/2)*mm;
+	G4double lollipop_leg_y = (139.00/2)*mm;
+	G4double lollipop_leg_z = (5.00/2)*mm;
+    
+    // Shielding lead parameters for a single lead sheet (multiply the z value by number of sheets to increase shielding)
+	// G4double lead_x = (111.00/2)*mm;
+	G4double lead_y = (114.00/2)*mm;
+	// G4double lead_z = (3.50/2)*mm;
+	
+	// Table parameters
+    G4double table_sizeXZ = (1000./2.)*mm;
+    G4double table_sizeY = (100./2.)*mm;
+
     // Air logical volume
-    G4Tubs* air_shape = new G4Tubs("Air_shape", 0, air_rad, air_hz, 0*deg, 360*deg);
+    G4Box* air_shape = new G4Box("Air_shape", air_XY, air_XY, air_Z);
     G4LogicalVolume* air_log = new G4LogicalVolume(air_shape, air_mat, "Air_Log");
+    
+    // Walls logical volume
+	G4Box* walls = new G4Box("Walls_shape", wall_sizeXY, wall_sizeXY, wall_sizeZ);
+    G4LogicalVolume* walls_log = new G4LogicalVolume(walls, wall_mat, "Walls_log");
 
     // Crystal housing logical volume
     G4Tubs* crys_housing = new G4Tubs("Crys_Housing", crystal_rad, crystalAl_outer_rad, crystalAl_hz, 0*deg, 360*deg);
@@ -232,6 +270,20 @@ G4VPhysicalVolume* B1DetectorConstruction_GAGG::Construct()
     G4Tubs* al_housing_end_shape = new G4Tubs("Bottom_Al_end", 0, BottomAl_outer_rad, BottomAl_end_hz, 0*deg, 360*deg);
     G4VSolid* bottom_al_shape = new G4UnionSolid("Bottom_Al_housing", al_housing_walls_shape, al_housing_end_shape, 0, G4ThreeVector(0., 0., (-BottomAl_hz-BottomAl_end_hz)*mm));
     G4LogicalVolume* al_bottom_hous_log = new G4LogicalVolume(bottom_al_shape, Al_mat, "Al_bottom");
+    
+    // Lollipop logical volume
+	G4Box* lollipop_housing_shape = new G4Box("Lollipop_housing", lollipop_house_x, lollipop_house_y, lollipop_house_z);
+	G4Box* lollipop_leg_shape = new G4Box("Lollipop_leg", lollipop_leg_x, lollipop_leg_y, lollipop_leg_z);
+	G4VSolid* lollipop_shape = new G4UnionSolid("Lollipop", lollipop_housing_shape, lollipop_leg_shape, 0, G4ThreeVector(0, lollipop_house_y+lollipop_leg_y, 0));
+	G4LogicalVolume* lollipop_log = new G4LogicalVolume(lollipop_shape, lollipop_mat, "Lollipop_log");
+	
+	// Lead Shielding logical volume
+	// G4Box* lead_shape = new G4Box("Lead_shape", lead_x, lead_y, lead_z);
+	// G4LogicalVolume* lead_log = new G4LogicalVolume(lead_shape, lead_shielding_mat, "Lead_log");
+	
+	// Table logical volume
+	G4Box* table_shape = new G4Box("Table_shape", table_sizeXZ, table_sizeY, table_sizeXZ);
+    G4LogicalVolume* table_log = new G4LogicalVolume(table_shape, table_mat, "Table_log");
 
     // Set visualization attributes for the materials
     G4VisAttributes* crys_housingVisAtt = new G4VisAttributes(G4Colour(1.0, 0.0, 0.0));
@@ -266,30 +318,50 @@ G4VPhysicalVolume* B1DetectorConstruction_GAGG::Construct()
     al_bottomVisAtt->SetForceSolid(true);
     al_bottom_hous_log->SetVisAttributes(al_bottomVisAtt);
     
-    G4VisAttributes* airVisAtt = new G4VisAttributes(G4Colour(1.0, 1.0, 1.0));
+    G4VisAttributes* airVisAtt = new G4VisAttributes(G4Colour(1.0, 1.0, 1.0, 0.0));
     airVisAtt->SetForceWireframe(true);
     air_log->SetVisAttributes(airVisAtt);
-
-
+    
+    G4VisAttributes* lollipopVisAtt = new G4VisAttributes(G4Colour(1.0, 1.0, 1.0));
+    lollipopVisAtt-> SetForceSolid(true);
+    lollipop_log->SetVisAttributes(lollipopVisAtt);
+    
+    // G4VisAttributes* leadVisAtt = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
+    // leadVisAtt-> SetForceSolid(true);
+    // lead_log->SetVisAttributes(leadVisAtt);
+    
+    G4VisAttributes* wallsVisAtt = new G4VisAttributes(G4Colour());
+    walls_log->SetVisAttributes(wallsVisAtt);
+    
+    G4VisAttributes* tableVisAtt = new G4VisAttributes(G4Colour(0.45,0.25,0.0));
+    // tableVisAtt-> SetForceSolid(true);
+    table_log->SetVisAttributes(tableVisAtt);
+    
 	// Place
-	G4double housing_shift = (air_hz-crystalAl_hz);
-	G4double crystal_pos = housing_shift + crystalAl_hz - crystal_hz -1.00*mm;
+	G4double distance_of_d_to_s = -100.00*mm; ;  // change this value depending on how far you want the top of the detector to be from the source
+	G4double crys_housing_pos = distance_of_d_to_s - crystalAl_hz;
+	G4double crystal_pos = crys_housing_pos + crystalAl_hz - crystal_hz - 1.00*mm;
 	G4double window_pos = crystal_pos + crystal_hz + window_hz;
-	G4double junction_pos = housing_shift-(crystalAl_hz+junction_hz);
+	G4double junction_pos = crys_housing_pos-(crystalAl_hz+junction_hz);
 	G4double shield_pos = junction_pos-(junction_hz+shield_hz);
 	G4double pmt_pos = crystal_pos-crystal_hz-pmt_hz;
 	G4double bottom_pos = shield_pos-(shield_hz+BottomAl_hz);
-	G4double offset = 200.00*mm;
+	// G4double lead_pos = crys_housing_pos + crystalAl_hz + lead_z;
+	G4double table_pos = - lead_y - table_sizeY;
 
-	new G4PVPlacement(0, G4ThreeVector(0., 0., offset), air_log, "Air_Parent", logicWorld, false, 0, checkOverlaps);
+    new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), walls_log, "Walls", logicWorld, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), air_log, "Air", walls_log, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0., table_pos, 0.), table_log, "Table", air_log, false, 0, checkOverlaps);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., crystal_pos), crystal_log, "Crystal", air_log, false, 0, checkOverlaps);
-	new G4PVPlacement(0, G4ThreeVector(0., 0., housing_shift), crys_housing_log, "Crystal_Housing", air_log, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0., 0., crys_housing_pos), crys_housing_log, "Crystal_Housing", air_log, false, 0, checkOverlaps);
     new G4PVPlacement(0, G4ThreeVector(0., 0., window_pos), window_log, "Window", air_log, false, 0, checkOverlaps);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., junction_pos), junction_log, "Junction", air_log, false, 0, checkOverlaps);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., shield_pos), shield_log, "Magnetic_Shield", air_log, false, 0, checkOverlaps);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., pmt_pos), pmt_log, "PMT", air_log, false, 0, checkOverlaps);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), vacuum_log, "Vacuum_in_PMT", pmt_log, false, 0, checkOverlaps);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., bottom_pos), al_bottom_hous_log, "Bottom_Housing", air_log, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), lollipop_log, "Lollipop", air_log, false, 0, checkOverlaps);
+	// new G4PVPlacement(0, G4ThreeVector(0., 0., lead_pos), lead_log, "Lead_Shielding", air_log, false, 0, checkOverlaps);
 
     //
   //always return the physical World

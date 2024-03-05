@@ -73,8 +73,8 @@ G4VPhysicalVolume* B1DetectorConstruction_HPGe::Construct()
   //     
   // World
   //
-  G4double world_sizeXY = 500*cm;
-  G4double world_sizeZ  = 500*cm;
+  G4double world_sizeXY = 1000*cm;
+  G4double world_sizeZ  = 1000*cm;
   G4Material* world_mat = nist->FindOrBuildMaterial("G4_AIR");
   
   G4Box* solidWorld = new G4Box("World",0.5*world_sizeXY, 0.5*world_sizeXY, 0.5*world_sizeZ);     //its size
@@ -95,6 +95,17 @@ G4VPhysicalVolume* B1DetectorConstruction_HPGe::Construct()
     G4Material* crystal_mat = nist->FindOrBuildMaterial("G4_Ge");
 	G4Material* window_mat = nist->FindOrBuildMaterial("G4_C");
 	G4Material* glass_mat = nist->FindOrBuildMaterial("G4_PLEXIGLASS");
+	// G4Material* lead_shielding_mat = nist->FindOrBuildMaterial("G4_Pb");
+    G4Material* wall_mat = nist->FindOrBuildMaterial("G4_CONCRETE");
+    G4Material* air_mat = nist->FindOrBuildMaterial("G4_AIR");
+    
+    // Wall parameters
+    G4double wall_sizeXY = (500.00/2.)*cm;
+    G4double wall_sizeZ  = (500.00/2.)*cm;
+    
+    // Air parameters
+    G4double air_sizeXY = (450./2.)*cm;
+    G4double air_sizeZ  = (450./2.)*cm;
 
     // Aliminium housing parameters
     G4double housing_rad = (67.00/2)*mm;
@@ -138,6 +149,12 @@ G4VPhysicalVolume* B1DetectorConstruction_HPGe::Construct()
 	G4double lollipop_leg_y = (139.00/2)*mm;
 	G4double lollipop_leg_z = (5.00/2)*mm;
 	
+	// Shielding lead parameters for a single lead sheet (multiply the z value by number of sheets to increase shielding)
+	// if the z value of lead becomes too big need to also increase distance_of_d_to_s so that the lead doesn't overlap with the lollipop
+	// G4double lead_x = (111.00/2)*mm;
+	// G4double lead_y = (114.00/2)*mm;
+	// G4double lead_z = (3.50/2)*mm;
+	
     // ALuminium housing logical volume
 	G4Tubs* housing_shape = new G4Tubs("Housing_walls", 0, housing_rad, housing_hz, 0*deg, 360*deg);
 	G4LogicalVolume* housing_log = new G4LogicalVolume(housing_shape, Al_mat, "Housing_Log");
@@ -174,12 +191,24 @@ G4VPhysicalVolume* B1DetectorConstruction_HPGe::Construct()
 	G4VSolid* lollipop_shape = new G4UnionSolid("Lollipop", lollipop_housing_shape, lollipop_leg_shape, 0, G4ThreeVector(0, lollipop_house_y+lollipop_leg_y, 0));
 	G4LogicalVolume* lollipop_log = new G4LogicalVolume(lollipop_shape, glass_mat, "Lollipop_log");
 	
+	// Shielding logical volume
+	// G4Box* shielding_shape = new G4Box("Shielding_shape", lead_x, lead_y, lead_z);
+	// G4LogicalVolume* shielding_log = new G4LogicalVolume(shielding_shape, lead_shielding_mat, "Shielding_log");
+	
+	// Walls logical volume
+	G4Box* walls = new G4Box("Walls_shape", wall_sizeXY, wall_sizeXY, wall_sizeZ);
+    G4LogicalVolume* walls_log = new G4LogicalVolume(walls, wall_mat, "Walls_log");
+    
+    // Air logical volume
+    G4Box* air_shape = new G4Box("Air_shape", air_sizeXY, air_sizeXY, air_sizeZ);
+    G4LogicalVolume* air_log = new G4LogicalVolume(air_shape, air_mat, "Air_log");
+	
 	// Set visualization attributes for the materials
 	G4VisAttributes* housingVisAtt = new G4VisAttributes(G4Colour(1.0, 0.0, 0.0));
 	// housingVisAtt->SetForceSolid(true);
     housing_log->SetVisAttributes(housingVisAtt);
     
-    G4VisAttributes* vacuumVisAtt = new G4VisAttributes(G4Colour());
+    G4VisAttributes* vacuumVisAtt = new G4VisAttributes(G4Colour(1.0, 1.0, 1.0, 0.0));
     // vacuumVisAtt->SetForceSolid(true);
     vacuum_log->SetVisAttributes(vacuumVisAtt);
     
@@ -199,29 +228,42 @@ G4VPhysicalVolume* B1DetectorConstruction_HPGe::Construct()
     G4VisAttributes* lollipopVisAtt = new G4VisAttributes(G4Colour(1.0, 1.0, 1.0));
     lollipopVisAtt-> SetForceSolid(true);
     lollipop_log->SetVisAttributes(lollipopVisAtt);
+    
+    // G4VisAttributes* shieldingVisAtt = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5));
+    // shieldingVisAtt-> SetForceSolid(true);
+    // shielding_log->SetVisAttributes(shieldingVisAtt);
+    
+    G4VisAttributes* wallsVisAtt = new G4VisAttributes(G4Colour());
+    walls_log->SetVisAttributes(wallsVisAtt);
+    
+    G4VisAttributes* airVisAtt = new G4VisAttributes(G4Colour(0.5, 0.5, 0.5, 0));
+    air_log->SetVisAttributes(airVisAtt);
 
 	// Place
+	G4double distance_of_d_to_s = -100.00*mm;  // change this value depending on how far you want the top of the detector to be from the source
+	G4double housing_pos = distance_of_d_to_s - housing_hz;
 	G4double window_pos = housing_hz - window_hz;
 	G4double crys_pos = window_pos - window_hz - 5.50*mm - crystal_hz;
-	G4double top_glass_pos = housing_hz + 32.00*mm + top_glass_z;
+	G4double top_glass_pos = housing_pos + housing_hz + 32.00*mm + top_glass_z;
+	// G4double shielding_pos = top_glass_pos + top_glass_z + lead_z;
 	G4double side_glass_pos_x = top_glass_x + side_glass_x;
 	G4double side_glass_pos_z = top_glass_pos-side_glass_z+top_glass_z;
-    G4double lollipop_pos = top_glass_pos + 2*top_glass_z + lollipop_house_z;
-    
-    G4double offset = 200.00*mm;
-
+	
 	
 	G4RotationMatrix* side_glass_rot = new G4RotationMatrix();
 	side_glass_rot->rotateZ(180*deg);
 	
-    new G4PVPlacement(0, G4ThreeVector(0, 0, offset), housing_log, "Al_Tube", logicWorld, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0, 0, 0), walls_log, "Walls", logicWorld, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0, 0, 0), air_log, "Air", walls_log, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0, 0, 0), lollipop_log, "Lollipop", air_log, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0, 0, housing_pos), housing_log, "Al_Tube", air_log, false, 0, checkOverlaps);
+    new G4PVPlacement(0, G4ThreeVector(0, 0, window_pos), window_log, "Window", housing_log, false, 0, checkOverlaps);
     new G4PVPlacement(0, G4ThreeVector(0, 0, -0.05*mm), vacuum_log, "Vacuum", housing_log, false, 0, checkOverlaps);
     new G4PVPlacement(0, G4ThreeVector(0, 0, crys_pos), crystal_log, "Crystal", vacuum_log, false, 0, checkOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(0, 0, window_pos), window_log, "Window", housing_log, false, 0, checkOverlaps);  // z is tube length - window thickness
-    new G4PVPlacement(0, G4ThreeVector(0, 0, offset + top_glass_pos), top_glass_log, "Top_Glass", logicWorld, false, 0, checkOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(-side_glass_pos_x, 0, offset + side_glass_pos_z), side_glass_log, "Side_Glass_A", logicWorld, false, 0, checkOverlaps);
-    new G4PVPlacement(side_glass_rot, G4ThreeVector(side_glass_pos_x, 0, offset + side_glass_pos_z), side_glass_log, "Side_Glass_B", logicWorld, false, 1, checkOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(0, 0, offset+lollipop_pos), lollipop_log, "Lollipop", logicWorld, false, 0, checkOverlaps);
+	new G4PVPlacement(0, G4ThreeVector(0, 0, top_glass_pos), top_glass_log, "Top_Glass", air_log, false, 0, checkOverlaps);
+    new G4PVPlacement(0, G4ThreeVector(-side_glass_pos_x, 0, side_glass_pos_z), side_glass_log, "Side_Glass_A", air_log, false, 0, checkOverlaps);
+    new G4PVPlacement(side_glass_rot, G4ThreeVector(side_glass_pos_x, 0, side_glass_pos_z), side_glass_log, "Side_Glass_B", air_log, false, 1, checkOverlaps);
+    // new G4PVPlacement(0, G4ThreeVector(0, 0, shielding_pos), shielding_log, "Lead_Shielding", air_log, false, 0, checkOverlaps);
 
  //
   //always return the physical World

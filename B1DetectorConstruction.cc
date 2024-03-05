@@ -29,7 +29,6 @@
 /// \brief Implementation of the B1DetectorConstruction class
 
 #include "B1DetectorConstruction.hh"
-#include "G4VisAttributes.hh"  // i put this
 
 #include "G4RunManager.hh"
 #include "G4NistManager.hh"
@@ -42,8 +41,9 @@
 #include "G4PVPlacement.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4Tubs.hh"
-#include "G4SubtractionSolid.hh"
+#include <G4VisAttributes.hh>
 #include "G4UnionSolid.hh"
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -74,8 +74,23 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
   //     
   // World
   //
-  G4double world_sizeXY = 50*cm;
-  G4double world_sizeZ  = 50*cm;
+  
+  //Colours
+  G4VisAttributes* green = new G4VisAttributes(G4Colour::Green());
+  green->SetVisibility(true);
+  green->SetForceSolid(true);
+  G4VisAttributes* red = new G4VisAttributes(G4Colour::Red());
+  red->SetVisibility(true);
+  red->SetForceSolid(true);
+  G4VisAttributes* blue = new G4VisAttributes(G4Colour::Blue());
+  blue->SetVisibility(true);
+  blue->SetForceSolid(true);
+  G4VisAttributes* yellow = new G4VisAttributes(G4Colour::Yellow());
+  yellow->SetVisibility(true);
+  //yellow->SetForceSolid(true);
+  
+  G4double world_sizeXY = 1000*cm;
+  G4double world_sizeZ  = 1000*cm;
   G4Material* world_mat = nist->FindOrBuildMaterial("G4_AIR");
   
   G4Box* solidWorld = new G4Box("World",0.5*world_sizeXY, 0.5*world_sizeXY, 0.5*world_sizeZ);     //its size
@@ -91,112 +106,140 @@ G4VPhysicalVolume* B1DetectorConstruction::Construct()
                       checkOverlaps);        //overlaps checking
   
 
-	// Germanium crystal dimensions and material
-	G4double crystal_rad = 2.545*cm;
-	G4double crystal_hz = 1*cm;  // half (value of be2020)
-	G4double cavity_rad = 0.5*cm;  // guess
-	G4double cavity_hz = 0.15*cm;  // guess
-    G4Material* crystal_mat = nist->FindOrBuildMaterial("G4_Ge");
+    // Table Volume
+    G4double table_sizeX = 100*cm;
+    G4double table_sizeY = 10*cm;
+    G4double table_sizeZ  = 100*cm;
+    G4Material* table_mat = nist->FindOrBuildMaterial("G4_CELLULOSE_BUTYRATE");
+    G4Box* tableWalls = new G4Box("table",0.5*table_sizeX, 0.5*table_sizeY, 0.5*table_sizeZ);     //its size
+    G4LogicalVolume* table_log = new G4LogicalVolume(tableWalls, table_mat, "table"); //its name
     
-    // Germanium crytal logical volume
-    G4Tubs* crystal_shape = new G4Tubs("Crystal", 0*cm, crystal_rad, crystal_hz, 0*deg, 360*deg);
+    // Lollipop material
+    G4Material* lollipop_mat = nist->FindOrBuildMaterial("G4_PLEXIGLASS");
+	G4double lollipop_house_x = (29.50/2)*mm;
+	G4double lollipop_house_y = (39.00/2)*mm;
+	G4double lollipop_house_z = (9.00/2)*mm;
+	
+	G4double lollipop_leg_x = (9.00/2)*mm;
+	G4double lollipop_leg_y = (139.00/2)*mm;
+	G4double lollipop_leg_z = (5.00/2)*mm;
+	
+	G4Box* lollipop_housing_shape = new G4Box("Lollipop_housing", lollipop_house_x, lollipop_house_y, lollipop_house_z);
+	G4Box* lollipop_leg_shape = new G4Box("Lollipop_leg", lollipop_leg_x, lollipop_leg_y, lollipop_leg_z);
+	G4VSolid* lollipop_shape = new G4UnionSolid("Lollipop", lollipop_housing_shape, lollipop_leg_shape, 0, G4ThreeVector(0, lollipop_house_y+lollipop_leg_y, 0));
+	G4LogicalVolume* lollipop_log = new G4LogicalVolume(lollipop_shape, lollipop_mat, "Lollipop_log");
+	
+	G4VisAttributes* lollipopVisAtt = new G4VisAttributes(G4Colour(1.0, 1.0, 1.0));
+    lollipopVisAtt-> SetForceSolid(true);
+    lollipop_log->SetVisAttributes(lollipopVisAtt);
     
-    G4Tubs* cavity_shape = new G4Tubs("Cavity", 0*cm, cavity_rad, cavity_hz, 0*deg, 360*deg);
-    G4VSolid* subtract = new G4SubtractionSolid("Crystal-Cavity", crystal_shape, cavity_shape, 0, G4ThreeVector(0, 0, -0.84*cm));  //-0.85 cm is a guess from our cavity_hz guess
-    G4LogicalVolume* crystal_log = new G4LogicalVolume(subtract, crystal_mat, "Crystal Log");
+                                   
+    //walls
+      G4double wall_sizeXY = 500*cm;
+      G4double wall_sizeZ  = 500*cm;
+      G4Material* wall_mat = nist->FindOrBuildMaterial("G4_CONCRETE");
+  
+     G4Box* solidWalls = new G4Box("Walls",0.5*wall_sizeXY, 0.5*wall_sizeXY, 0.5*wall_sizeZ);     //its size
+      
+    G4LogicalVolume* logicwalls = new G4LogicalVolume(solidWalls, wall_mat, "wall");    //its name
     
-    // Aliminium tube parameters
-    G4double tube_outer_rad = 3.35*cm;  // is this right, should be a bit bigger?
-    G4double tube_hz = 12.12*cm;  // length is halved, not sure about this
-    G4Material* tube_mat = nist->FindOrBuildMaterial("G4_Al"); // not sure about this
+     
+  G4ThreeVector wall_pos = G4ThreeVector(0,0,0);
+  G4VPhysicalVolume* wall_physical = new G4PVPlacement(0, wall_pos, "wall", logicwalls, physWorld, false, 0, checkOverlaps);	
 
-    // Create logical volume for the tube
-	G4Tubs* tube_shape = new G4Tubs("Tube", 0*cm, tube_outer_rad, tube_hz, 0*deg, 360*deg);
-	G4LogicalVolume* tube_log = new G4LogicalVolume(tube_shape, tube_mat, "TubeLog");
-	
-	// Window parameters
-	G4double window_radius = 3.35*cm;  // same as tube
-	G4double window_hz = 0.03*cm;  // half
-	G4Material* window_mat = nist->FindOrBuildMaterial("G4_C");
-	
-	//Creates logical volume for the window
-	G4Tubs* window_shape = new G4Tubs("Window", 0*mm, window_radius, window_hz, 0*deg, 360*deg);
-	G4LogicalVolume* window_log = new G4LogicalVolume(window_shape, window_mat, "WindowLog");
-	
-	
-	// Vacuum parameter
-	G4double vacuum_radius = 3.25*cm;  // accounting for 0.1cm Al walls
-	G4double vacuum_hz = 12.07*cm;
-	G4Material* vacuum_mat = nist->FindOrBuildMaterial("G4_Galactic");
-	
-	//Creates logical volume for vacuum
-	G4Tubs* vacuum_shape = new G4Tubs("Vacuum", 0*mm, vacuum_radius, vacuum_hz, 0*deg, 360*deg);
-	G4LogicalVolume* vacuum_log = new G4LogicalVolume(vacuum_shape, vacuum_mat, "VacuumLog");
-	
-	// GlassA parameter
-	G4double GlassA_x = 11*cm;
-	G4double GlassA_y = 10*cm;
-	G4double GlassA_z = 0.5*cm;
-	G4double hole_rad = 4*cm;
-	G4Material* glass_mat = nist->FindOrBuildMaterial("G4_PLEXIGLASS");
-	
-	//Create logical volume for GlassA
-	G4Box* glassA_shape = new G4Box("GlassA", GlassA_x, GlassA_y, GlassA_z);
-	
-	G4Tubs* hole_shape = new G4Tubs("Hole", 0*cm, hole_rad, GlassA_z+1*cm, 0*deg, 360*deg);
-    G4VSolid* glassA_new = new G4SubtractionSolid("Glass-Hole", glassA_shape, hole_shape);
-    
-	G4LogicalVolume* glassA_log = new G4LogicalVolume(glassA_new, glass_mat, "GlassALog");
-	
-	// GlassB parameter
-	G4double GlassB_x = 0.5*cm;
-	G4double GlassB_y = 10*cm;
-	G4double GlassB_z = 12.9*cm;
-	
-	G4double small_x = 5.45*cm;
-	G4double small_y = 10*cm;
-	G4double small_z = 0.5*cm;
-	
-	//Create logical volume for GlassB
-	G4Box* glassB_shape = new G4Box("GlassB", GlassB_x, GlassB_y, GlassB_z);
-	
-	G4Box* small_shape = new G4Box("Small", small_x, small_y, small_z);
-	G4VSolid* glassB_new = new G4UnionSolid("GlassB_fr", glassB_shape, small_shape, 0, G4ThreeVector(-4.95*cm, 0, -13.4*cm));
-	G4LogicalVolume* glassB_log = new G4LogicalVolume(glassB_new, glass_mat, "GlassBLog");
-	
-	// Set visualization attributes for the materials
-    G4VisAttributes* crystalVisAtt = new G4VisAttributes(G4Colour(0.0, 1.0, 1.0));
-    crystal_log->SetVisAttributes(crystalVisAtt);
-    
-    G4VisAttributes* vacuumVisAtt = new G4VisAttributes(G4Colour());
-    vacuum_log->SetVisAttributes(vacuumVisAtt);
+    // Air
+  //
+  G4double air_sizeXY = 450*cm;
+  G4double air_sizeZ  = 450*cm;
+  G4Material* air_mat = nist->FindOrBuildMaterial("G4_AIR");
+  
+  G4Box* solidAir = new G4Box("air",0.5*air_sizeXY, 0.5*air_sizeXY, 0.5*air_sizeZ);     //its size
+      
+  G4LogicalVolume* airWorld = new G4LogicalVolume(solidAir, air_mat, "inner"); //its name
+  
+  G4ThreeVector air_pos = G4ThreeVector(0,0,0);
+  G4VPhysicalVolume* air_physical = new G4PVPlacement(0, air_pos, "air", airWorld, wall_physical, false, 0, checkOverlaps);	
 
-    G4VisAttributes* tubeVisAtt = new G4VisAttributes(G4Colour(1.0, 0.0, 0.0));
-    tube_log->SetVisAttributes(tubeVisAtt);
+	//face construction 
+	G4double face_r = 5.71*cm;
+	G4double back_hz =  2*mm;
+	G4double face_hz =  0.5*mm;
+	G4Tubs* face_shape = new G4Tubs("face", 0*mm, face_r, face_hz, 0*deg, 360*deg);
+	G4LogicalVolume* face_log = new G4LogicalVolume(face_shape, nist->FindOrBuildMaterial("G4_Al"), "face");
+	face_log->SetVisAttributes(red);
+
+
+	// scintillator construction
+	
+	// define scintillator crystal properties
+	
+	G4Material* NaI = nist->FindOrBuildMaterial("G4_SODIUM_IODIDE");
+    G4Element* Thallium = nist->FindOrBuildElement("Tl");
+	
+	G4Material* NaTi = new G4Material("NaTi", 3.67*g/cm3, 2, kStateSolid);
+    NaTi->AddMaterial(NaI, 99.5*perCent);
+    NaTi->AddElement(Thallium, 0.5*perCent);
     
-    G4VisAttributes* windowVisAtt = new G4VisAttributes(G4Colour(0.0, 0.0, 1.0));
-    window_log->SetVisAttributes(windowVisAtt);
-    
-    G4VisAttributes* glassVisAtt = new G4VisAttributes(G4Colour(1.0, 1.0, 0.0));
-    glassA_log->SetVisAttributes(glassVisAtt);
-    
-    G4VisAttributes* glassBVisAtt = new G4VisAttributes(G4Colour(1.0, 0.0, 1.0));
-    glassB_log->SetVisAttributes(glassBVisAtt);
+    // define the crystal logical volume
+	G4double scint_r = 5.51*cm;
+	G4double scint_hz = 5.40*cm;
+	G4Tubs* scintillator_shape = new G4Tubs("scintillator",0*mm,scint_r,scint_hz,0*deg,360*deg);
+	G4LogicalVolume* scint_log = new G4LogicalVolume(scintillator_shape, NaTi, "scintillator");
+    scint_log->SetVisAttributes(blue);
+    // Shield Construction
+    G4double shield_r = 5.71*cm;
+	G4double shield_hz = 5.40*cm;
+	G4Tubs* shield_shape = new G4Tubs("shield",0,shield_r,shield_hz,0*deg,360*deg);
+	G4LogicalVolume* shield_log = new G4LogicalVolume(shield_shape, nist->FindOrBuildMaterial("G4_Al"), "shield");
+	shield_log->SetVisAttributes(yellow);
+	
+	//Detector Back Construction
+	G4double back_r = 5.71*cm;
+	G4Tubs* back_shape = new G4Tubs("back", 0*mm, back_r, back_hz, 0*deg, 360*deg);
+	G4LogicalVolume* back_log = new G4LogicalVolume(back_shape, nist->FindOrBuildMaterial("G4_Al"), "face");
+	back_log->SetVisAttributes(green);
+
+
+	
+	// Apparatus Shifts
+    G4double table_shift = shield_r + table_sizeY*0.5;
+    G4double hz_shift = 10*cm;
+
+
     
 
-	// Place
-	
-	G4RotationMatrix* GlassC_rot = new G4RotationMatrix();
-	GlassC_rot->rotateZ(180*deg);
-	
-    new G4PVPlacement(0, G4ThreeVector(0, 0, 0), tube_log, "Al Tube", logicWorld, false, checkOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(0, 0, 0.02*cm), vacuum_log, "Vacuum", tube_log, false, checkOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(0, 0, 10.52*cm), crystal_log, "Ge Crystal", vacuum_log, false, checkOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(0, 0, 12.15*cm), window_log, "Window", logicWorld, false, checkOverlaps);  // z is tube length - window thickness
-    new G4PVPlacement(0, G4ThreeVector(0, 0, 14.6*cm), glassA_log, "GlassA", logicWorld, false, checkOverlaps);
-    new G4PVPlacement(0, G4ThreeVector(-10.5*cm, 0, 1.2*cm), glassB_log, "GlassB", logicWorld, false, checkOverlaps);
-    new G4PVPlacement(GlassC_rot, G4ThreeVector(10.5*cm, 0, 1.2*cm), glassB_log, "GlassC", logicWorld, false, checkOverlaps);
+	// shield Placement
+	G4ThreeVector shield_pos = G4ThreeVector(0,0,hz_shift + shield_hz  + face_hz);
+	G4RotationMatrix* shield_rot = new G4RotationMatrix();
+	shield_rot -> rotateX(0*deg);
+	G4VPhysicalVolume* shield = new G4PVPlacement(0, shield_pos, "shield", shield_log, air_physical, false, 0, checkOverlaps);
+    
+    // Scintillator Placement
+	G4ThreeVector scintillator_pos = G4ThreeVector(0,0,0);
+	G4RotationMatrix* scintillator_rot = new G4RotationMatrix();
+	scintillator_rot -> rotateX(0*deg);
+     new G4PVPlacement(0, scintillator_pos, "Crystal", scint_log, shield, false, 0, checkOverlaps);
+		
+	//Table placement
+    G4ThreeVector table_pos = G4ThreeVector(0,-table_shift,0);
+	G4RotationMatrix* table_rot = new G4RotationMatrix();
+	table_rot->rotateX(0*deg);
+    new G4PVPlacement(0, table_pos, "table", table_log, air_physical, false, 0, checkOverlaps);
+    
+    // back placement
+    G4double shield_position = hz_shift + shield_hz  + face_hz;
+    G4ThreeVector back_pos = G4ThreeVector(0,0,shield_position+shield_hz+back_hz);
+	G4RotationMatrix* back_rot = new G4RotationMatrix();
+	back_rot->rotateX(0*deg);
+     new G4PVPlacement(0, back_pos, "back", back_log, air_physical, false, 0, checkOverlaps);	
+    
+    // face placement
+	G4ThreeVector face_pos = G4ThreeVector(0,0,shield_position-shield_hz-face_hz);
+	G4RotationMatrix* face_rot = new G4RotationMatrix();
+	face_rot->rotateX(0*deg);
+    new G4PVPlacement(0, face_pos, "face", face_log, air_physical, false, 0, checkOverlaps);	
 
+    new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), lollipop_log, "Lollipop", airWorld, false, 0, checkOverlaps);
 
  //
   //always return the physical World
